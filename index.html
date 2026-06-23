@@ -59,6 +59,12 @@ body::after{content:'';position:fixed;inset:0;
 .card{background:rgba(12,21,32,0.85);border:1px solid var(--border);border-radius:13px;padding:16px;margin-bottom:12px;backdrop-filter:blur(6px)}
 .card-title{font-size:14px;font-weight:600;margin-bottom:12px;color:#e0eaf5;display:flex;align-items:center;gap:8px}
 
+/* Calendar nav */
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cal-nav-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:5px 14px;border-radius:7px;cursor:pointer;font-size:16px;transition:.2s}
+.cal-nav-btn:hover{border-color:var(--green);color:var(--green)}
+.cal-nav-btn:disabled{opacity:0.3;cursor:default}
+.cal-month-title{font-size:14px;font-weight:600;color:#e0eaf5}
 /* Calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .cal-hdr{text-align:center;font-size:10px;color:var(--muted);font-weight:600;padding:3px 0}
@@ -323,7 +329,12 @@ body::after{content:'';position:fixed;inset:0;
   <div class="main">
     <div>
       <div class="card">
-        <div class="card-title">📅 تقويم الصفقات — <span id="monthLabel" style="color:var(--green);margin-right:4px"></span></div>
+        <div class="card-title">📅 تقويم الصفقات</div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" id="btnPrev" onclick="changeMonth(-1)">&#8250;</button>
+          <span class="cal-month-title" id="monthLabel"></span>
+          <button class="cal-nav-btn" id="btnNext" onclick="changeMonth(1)">&#8249;</button>
+        </div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
       <div class="stats-bar">
@@ -396,6 +407,8 @@ function clearSession(){sessionStorage.removeItem('tt_s')}
 const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const dayNames=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const now=new Date();
+const MIN_YEAR=2023, MIN_MONTH=5; // يونيو 2023 (0-indexed)
+let viewYear=now.getFullYear(), viewMonth=now.getMonth();
 let selDay=null,currentUser=null;
 
 function init(){
@@ -483,21 +496,39 @@ function renderUsersList(){
   list.innerHTML=others.map(u=>`<div class="user-item"><div class="u-row"><div class="u-av">${u.username.charAt(0).toUpperCase()}</div><div><div class="u-name">${u.username}</div><div class="u-role">${u.role==='owner'?'👑 مالك':'👤 مستخدم'}</div></div></div><button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button></div>`).join('');
 }
 
-function getUserTrades(){const d=getData();return d.trades[currentUser.username]||[]}
-function saveUserTrades(t){const d=getData();d.trades[currentUser.username]=t;saveData(d)}
+function tradeKey(){return currentUser.username+'_'+viewYear+'_'+viewMonth}
+function getUserTrades(){const d=getData();return d.trades[tradeKey()]||[]}
+function saveUserTrades(t){const d=getData();d.trades[tradeKey()]=t;saveData(d)}
+
+function changeMonth(dir){
+  viewMonth+=dir;
+  if(viewMonth>11){viewMonth=0;viewYear++;}
+  if(viewMonth<0){viewMonth=11;viewYear--;}
+  // حد أدنى: يونيو 2023
+  if(viewYear<MIN_YEAR||(viewYear===MIN_YEAR&&viewMonth<MIN_MONTH)){viewYear=MIN_YEAR;viewMonth=MIN_MONTH;}
+  // حد أقصى: الشهر الحالي
+  if(viewYear>now.getFullYear()||(viewYear===now.getFullYear()&&viewMonth>now.getMonth())){viewYear=now.getFullYear();viewMonth=now.getMonth();}
+  buildCal();updateStats();
+}
 
 function buildCal(){
-  document.getElementById('monthLabel').textContent=months[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('monthLabel').textContent=months[viewMonth]+' '+viewYear;
+  // تحديث حالة أزرار التنقل
+  const atMin=viewYear===MIN_YEAR&&viewMonth===MIN_MONTH;
+  const atMax=viewYear===now.getFullYear()&&viewMonth===now.getMonth();
+  document.getElementById('btnPrev').disabled=atMin;
+  document.getElementById('btnNext').disabled=atMax;
   const g=document.getElementById('calGrid');g.innerHTML='';
   dayNames.forEach(d=>{const h=document.createElement('div');h.className='cal-hdr';h.textContent=d;g.appendChild(h)});
-  const total=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
-  const first=new Date(now.getFullYear(),now.getMonth(),1).getDay();
+  const total=new Date(viewYear,viewMonth+1,0).getDate();
+  const first=new Date(viewYear,viewMonth,1).getDay();
   const trades=getUserTrades();
   for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-cell empty';g.appendChild(e)}
   for(let d=1;d<=total;d++){
     const c=document.createElement('div');
     const t=trades.find(x=>x.day===d);
-    c.className='cal-cell'+(d===now.getDate()?' today':'')+(t?' '+(t.result==='win'?'win-cell':'loss-cell'):'');
+    const isToday=d===now.getDate()&&viewMonth===now.getMonth()&&viewYear===now.getFullYear();
+    c.className='cal-cell'+(isToday?' today':'')+(t?' '+(t.result==='win'?'win-cell':'loss-cell'):'');
     c.onclick=()=>openTradeModal(d);
     const n=document.createElement('div');n.className='cal-num';n.textContent=d;c.appendChild(n);
     if(t){
