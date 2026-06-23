@@ -407,8 +407,9 @@ function clearSession(){sessionStorage.removeItem('tt_s')}
 const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const dayNames=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const now=new Date();
-const MIN_YEAR=2023, MIN_MONTH=5; // يونيو 2023 (0-indexed)
-let viewYear=now.getFullYear(), viewMonth=now.getMonth();
+const MIN_YEAR=2026, MIN_MONTH=5;  // يونيو 2026
+const MAX_YEAR=2030, MAX_MONTH=8;  // سبتمبر 2030
+let viewYear=2026, viewMonth=5;
 let selDay=null,currentUser=null;
 
 function init(){
@@ -504,10 +505,8 @@ function changeMonth(dir){
   viewMonth+=dir;
   if(viewMonth>11){viewMonth=0;viewYear++;}
   if(viewMonth<0){viewMonth=11;viewYear--;}
-  // حد أدنى: يونيو 2023
   if(viewYear<MIN_YEAR||(viewYear===MIN_YEAR&&viewMonth<MIN_MONTH)){viewYear=MIN_YEAR;viewMonth=MIN_MONTH;}
-  // حد أقصى: الشهر الحالي
-  if(viewYear>now.getFullYear()||(viewYear===now.getFullYear()&&viewMonth>now.getMonth())){viewYear=now.getFullYear();viewMonth=now.getMonth();}
+  if(viewYear>MAX_YEAR||(viewYear===MAX_YEAR&&viewMonth>MAX_MONTH)){viewYear=MAX_YEAR;viewMonth=MAX_MONTH;}
   buildCal();updateStats();
 }
 
@@ -515,7 +514,7 @@ function buildCal(){
   document.getElementById('monthLabel').textContent=months[viewMonth]+' '+viewYear;
   // تحديث حالة أزرار التنقل
   const atMin=viewYear===MIN_YEAR&&viewMonth===MIN_MONTH;
-  const atMax=viewYear===now.getFullYear()&&viewMonth===now.getMonth();
+  const atMax=viewYear===MAX_YEAR&&viewMonth===MAX_MONTH;
   document.getElementById('btnPrev').disabled=atMin;
   document.getElementById('btnNext').disabled=atMax;
   const g=document.getElementById('calGrid');g.innerHTML='';
