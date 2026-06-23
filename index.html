@@ -711,13 +711,26 @@ async function buildTicker(){
   if(cache&&(Date.now()-cache.ts)<3600000){renderTicker(cache.pairs);return}
 
   try{
-    const [fxRes,btcRes]=await Promise.all([
+    const [fxRes,btcRes,goldRes]=await Promise.all([
       fetch('https://open.er-api.com/v6/latest/USD'),
-      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true'),
+      fetch('https://api.metals.live/v1/spot/gold').catch(()=>null)
     ]);
     const fx=await fxRes.json();
     const btc=await btcRes.json();
     const r=fx.rates;
+
+    // Gold price from metals.live (free, no key)
+    let goldPrice=null;
+    if(goldRes&&goldRes.ok){
+      try{
+        const gd=await goldRes.json();
+        goldPrice=Array.isArray(gd)?gd[0]?.gold:gd?.gold;
+      }catch(_){}
+    }
+    // Fallback: try XAU from er-api if available
+    if(!goldPrice&&r.XAU&&isFinite(1/r.XAU)) goldPrice=parseFloat((1/r.XAU).toFixed(2));
+
     const prev=JSON.parse(localStorage.getItem('tt_prices_prev')||'null');
     const pch=(sym,val)=>{
       if(!prev)return null;
@@ -726,7 +739,7 @@ async function buildTicker(){
       return ((val-old)/old*100).toFixed(3);
     };
     const raw={
-      'XAU/USD':parseFloat((1/r.XAU).toFixed(2)),
+      'XAU/USD':goldPrice?parseFloat(goldPrice.toFixed(2)):null,
       'EUR/USD':parseFloat((1/r.EUR).toFixed(4)),
       'GBP/USD':parseFloat((1/r.GBP).toFixed(4)),
       'USD/JPY':parseFloat(r.JPY.toFixed(2)),
@@ -737,7 +750,7 @@ async function buildTicker(){
     };
     const btcChange=btc.bitcoin.usd_24h_change;
     const pairs=[
-      {s:'XAU/USD',p:raw['XAU/USD'].toLocaleString('en-US',{minimumFractionDigits:2}),ch:pch('XAU/USD',raw['XAU/USD']),up:pch('XAU/USD',raw['XAU/USD'])>0},
+      {s:'XAU/USD',p:raw['XAU/USD']?raw['XAU/USD'].toLocaleString('en-US',{minimumFractionDigits:2}):'—',ch:raw['XAU/USD']?pch('XAU/USD',raw['XAU/USD']):null,up:pch('XAU/USD',raw['XAU/USD'])>0},
       {s:'EUR/USD',p:raw['EUR/USD'],ch:pch('EUR/USD',raw['EUR/USD']),up:pch('EUR/USD',raw['EUR/USD'])>0},
       {s:'GBP/USD',p:raw['GBP/USD'],ch:pch('GBP/USD',raw['GBP/USD']),up:pch('GBP/USD',raw['GBP/USD'])>0},
       {s:'USD/JPY',p:raw['USD/JPY'],ch:pch('USD/JPY',raw['USD/JPY']),up:pch('USD/JPY',raw['USD/JPY'])>0},
