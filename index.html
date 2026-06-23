@@ -6,106 +6,109 @@
 <title>TraderTrack</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
-:root{
-  --bg:#080c10;--card:#0d1520;--card2:#101a28;--border:#1a2d45;
-  --green:#00e676;--red:#ff3d3d;--gold:#ffc107;--text:#c8d8e8;--muted:#4a6080;
-}
-body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,230,118,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+:root{--bg:#06090d;--card:#0c1520;--card2:#0f1a28;--border:#1a2d45;--green:#00e676;--red:#ff3d3d;--gold:#ffc107;--text:#c8d8e8;--muted:#4a6080}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden;position:relative}
 
-/* ===== AUTH SCREENS ===== */
-.auth-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:var(--bg)}
-.auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px;width:90%;max-width:420px;position:relative}
+/* Circuit board background */
+body::before{content:'';position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(0,230,118,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,230,118,0.04) 1px,transparent 1px);
+  background-size:50px 50px;pointer-events:none;z-index:0}
+body::after{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(0,0,0,0.7) 0%,transparent 70%);
+  pointer-events:none;z-index:0}
+
+/* Animals container */
+.animals{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+
+/* ===== AUTH ===== */
+.auth-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(6,9,13,0.95)}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px;width:90%;max-width:420px}
 .auth-logo{text-align:center;margin-bottom:24px}
-.auth-logo .logo-icon{width:54px;height:54px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 20px rgba(0,230,118,0.4);margin-bottom:12px}
-.auth-logo h2{font-size:22px;font-weight:700;color:#fff}
-.auth-logo h2 span{color:var(--green)}
+.auth-logo .li{width:54px;height:54px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 24px rgba(0,230,118,0.5);margin-bottom:12px}
+.auth-logo h2{font-size:22px;font-weight:700;color:#fff}.auth-logo h2 span{color:var(--green)}
 .auth-logo p{font-size:13px;color:var(--muted);margin-top:4px}
-.auth-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:4px;margin-bottom:20px;gap:4px}
-.auth-tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:0.2s;border:none;background:transparent}
-.auth-tab.active{background:var(--green);color:#000;font-weight:700}
+.setup-badge{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);color:var(--gold);padding:8px 14px;border-radius:8px;font-size:12px;text-align:center;margin-bottom:18px}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
-.field input,.field select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;color:#fff;font-size:14px;transition:0.2s}
+.field input,.field select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;color:#fff;font-size:14px;transition:.2s}
 .field input:focus,.field select:focus{outline:none;border-color:var(--green);box-shadow:0 0 8px rgba(0,230,118,0.2)}
 .field input::placeholder{color:var(--muted)}
-.field select option{background:#0d1a28}
-.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;margin-top:6px;transition:0.2s}
-.btn-primary:hover{opacity:0.9}
-.auth-msg{text-align:center;font-size:12px;color:var(--muted);margin-top:14px}
-.auth-msg span{color:var(--green);cursor:pointer}
+.btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;transition:.2s}
+.btn-primary:hover{opacity:.9}
 .err-msg{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:9px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none}
-.setup-badge{background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);color:var(--gold);padding:8px 14px;border-radius:8px;font-size:12px;text-align:center;margin-bottom:18px}
+#authScreen{display:flex}
+#appScreen{display:none;flex-direction:column;flex:1}
 
 /* ===== HEADER ===== */
-.header{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:13px 24px;background:rgba(8,12,16,0.97);border-bottom:1px solid var(--border)}
+.header{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:12px 24px;background:rgba(6,9,13,0.9);border-bottom:1px solid var(--border);backdrop-filter:blur(8px)}
 .logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:700;color:#fff}
-.logo-sm{width:32px;height:32px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px rgba(0,230,118,0.4)}
+.logo-sm{width:32px;height:32px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 12px rgba(0,230,118,0.5)}
 .logo span{color:var(--green)}
 .header-right{display:flex;align-items:center;gap:10px}
 .owner-badge{display:flex;align-items:center;gap:7px;background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.35);border-radius:22px;padding:5px 13px;font-size:12px;color:var(--gold)}
 .user-badge{display:flex;align-items:center;gap:7px;background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);border-radius:22px;padding:5px 13px;font-size:12px;color:var(--green)}
-.av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.av{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#000;background:linear-gradient(135deg,#ffd700,#ff8f00)}
 .btn-logout{background:transparent;border:1px solid rgba(255,61,61,0.35);color:var(--red);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px}
 .btn-logout:hover{background:rgba(255,61,61,0.08)}
-.btn-add-user{background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.4);color:var(--gold);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;display:none}
-.btn-add-user:hover{background:rgba(255,193,7,0.2)}
+.btn-add-user{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);color:var(--gold);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;display:none}
 
 /* ===== MAIN ===== */
-.main{position:relative;z-index:5;display:grid;grid-template-columns:1fr 300px;gap:15px;padding:15px 22px;flex:1;padding-bottom:50px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:13px;padding:17px;margin-bottom:13px}
-.card-title{font-size:14px;font-weight:600;margin-bottom:13px;color:#e0eaf5;display:flex;align-items:center;gap:8px}
+.main{position:relative;z-index:5;display:grid;grid-template-columns:1fr 295px;gap:14px;padding:14px 22px 52px}
+.card{background:rgba(12,21,32,0.85);border:1px solid var(--border);border-radius:13px;padding:16px;margin-bottom:12px;backdrop-filter:blur(6px)}
+.card-title{font-size:14px;font-weight:600;margin-bottom:12px;color:#e0eaf5;display:flex;align-items:center;gap:8px}
 
 /* Calendar */
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal-header{text-align:center;font-size:10px;color:var(--muted);font-weight:600;padding:3px 0}
-.cal-cell{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:7px;padding:7px 5px;min-height:64px;cursor:pointer;transition:0.2s;position:relative}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-hdr{text-align:center;font-size:10px;color:var(--muted);font-weight:600;padding:3px 0}
+.cal-cell{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:7px;padding:6px 4px;min-height:62px;cursor:pointer;transition:.2s;position:relative}
 .cal-cell:hover{border-color:var(--green);background:rgba(0,230,118,0.05)}
-.cal-cell.today{border-color:var(--green);box-shadow:0 0 10px rgba(0,230,118,0.2)}
+.cal-cell.today{border-color:var(--green);box-shadow:0 0 12px rgba(0,230,118,0.25),inset 0 0 8px rgba(0,230,118,0.08)}
 .cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
-.cal-cell.win-cell{border-color:rgba(0,230,118,0.4);background:rgba(0,230,118,0.06)}
-.cal-cell.loss-cell{border-color:rgba(255,61,61,0.4);background:rgba(255,61,61,0.06)}
+.cal-cell.win-cell{border-color:rgba(0,230,118,0.5);background:rgba(0,230,118,0.07)}
+.cal-cell.loss-cell{border-color:rgba(255,61,61,0.5);background:rgba(255,61,61,0.07)}
 .cal-num{font-size:11px;font-weight:700;color:#fff}
 .cal-cell.today .cal-num{color:var(--green)}
 .cal-lbl{font-size:9px;padding:1px 4px;border-radius:3px;margin-top:3px;display:inline-block}
 .win-lbl{background:rgba(0,230,118,0.15);color:var(--green)}
 .loss-lbl{background:rgba(255,61,61,0.15);color:var(--red)}
-.cal-arr{position:absolute;bottom:4px;right:4px;font-size:13px}
+.cal-arr{position:absolute;bottom:3px;right:4px;font-size:14px}
 
 /* Stats */
-.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.stat-card{background:var(--card2);border:1px solid var(--border);border-radius:11px;padding:13px 16px;display:flex;align-items:center;gap:12px}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.stat-card{background:rgba(15,26,40,0.9);border:1px solid var(--border);border-radius:11px;padding:12px 15px;display:flex;align-items:center;gap:11px;backdrop-filter:blur(6px)}
 .stat-label{font-size:10px;color:var(--muted);margin-bottom:3px}
-.stat-value{font-size:20px;font-weight:700;color:#fff}
+.stat-value{font-size:19px;font-weight:700;color:#fff}
 .stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}
 .circ-wrap{position:relative;width:50px;height:50px;flex-shrink:0}
 .circ-wrap svg{transform:rotate(-90deg)}
 .circ-track{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:5}
-.circ-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.5s;stroke-dasharray:126;stroke-dashoffset:126}
+.circ-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .5s;stroke-dasharray:126;stroke-dashoffset:126}
 .circ-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--green)}
 
 /* Sidebar */
 .calc-inp{width:100%;padding:9px 11px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:#fff;font-size:13px}
 .calc-inp:focus{outline:none;border-color:var(--green)}
 .calc-inp::placeholder{color:var(--muted)}
-.calc-res{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);color:var(--green);padding:11px;text-align:center;border-radius:7px;font-size:15px;font-weight:700;margin-top:3px}
+.calc-res{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.35);color:var(--green);padding:11px;text-align:center;border-radius:7px;font-size:15px;font-weight:700;margin-top:3px;box-shadow:0 0 12px rgba(0,230,118,0.1)}
 .week-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
 .week-row:last-child{border-bottom:none}
 .week-val{font-size:17px;font-weight:700}
 
-/* Users Panel (owner only) */
+/* Users panel */
 .users-panel{display:none}
-.user-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.user-item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
 .user-item:last-child{border-bottom:none}
-.user-info-row{display:flex;align-items:center;gap:9px}
-.user-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#00c853,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000}
-.user-name{font-size:13px;font-weight:600;color:#fff}
-.user-role{font-size:10px;color:var(--muted)}
+.u-row{display:flex;align-items:center;gap:9px}
+.u-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#00c853,#00bcd4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000}
+.u-name{font-size:13px;font-weight:600;color:#fff}
+.u-role{font-size:10px;color:var(--muted)}
 .btn-del{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px}
 
-/* Trade Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:150;justify-content:center;align-items:center}
-.modal-box{background:#0d1a28;border:1px solid var(--border);border-radius:15px;padding:24px;width:90%;max-width:440px;position:relative}
+/* Modals */
+.modal-overlay,.add-user-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:150;justify-content:center;align-items:center}
+.modal-box,.add-user-box{background:#0b1624;border:1px solid var(--border);border-radius:15px;padding:24px;width:90%;max-width:440px;position:relative}
 .modal-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:16px}
 .close-btn{position:absolute;top:13px;left:14px;background:none;border:none;color:var(--muted);font-size:21px;cursor:pointer}
 .form-lbl{font-size:11px;color:var(--muted);margin-bottom:4px;display:block}
@@ -117,44 +120,178 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .trade-btns{display:flex;gap:9px;margin-top:5px}
 .btn-win{flex:1;padding:11px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 .btn-loss{flex:1;padding:11px;background:linear-gradient(135deg,#c62828,#ff3d3d);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
-
-/* Add user modal */
-.add-user-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:160;justify-content:center;align-items:center}
-.add-user-box{background:#0d1a28;border:1px solid var(--border);border-radius:15px;padding:24px;width:90%;max-width:380px;position:relative}
+.add-user-box{max-width:380px}
 
 /* Ticker */
-.ticker{position:fixed;bottom:0;left:0;width:100%;background:rgba(8,12,16,0.96);border-top:1px solid var(--border);padding:5px 0;overflow:hidden;z-index:20}
+.ticker{position:fixed;bottom:0;left:0;width:100%;background:rgba(6,9,13,0.95);border-top:1px solid var(--border);padding:5px 0;overflow:hidden;z-index:20}
 .ticker-inner{display:flex;gap:38px;white-space:nowrap;animation:scroll 35s linear infinite}
 @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .tick-item{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:7px}
 .tick-sym{color:#fff;font-weight:600}
 .tick-up{color:var(--green)}.tick-dn{color:var(--red)}
-
-/* Bull/Bear bg */
-.bull-bg{position:fixed;left:-50px;bottom:70px;width:380px;height:380px;opacity:0.12;pointer-events:none;z-index:0;filter:drop-shadow(0 0 28px #00e676)}
-.bear-bg{position:fixed;right:-40px;bottom:70px;width:350px;height:350px;opacity:0.09;pointer-events:none;z-index:0;filter:drop-shadow(0 0 28px #ff3d3d)}
-
-/* Page visibility */
-#authScreen{display:flex}
-#appScreen{display:none;flex-direction:column;flex:1}
 </style>
 </head>
 <body>
 
-<!-- Bull / Bear SVG backgrounds -->
-<svg class="bull-bg" viewBox="0 0 200 200" fill="none"><ellipse cx="100" cy="140" rx="55" ry="30" fill="#00e676" opacity="0.6"/><rect x="75" y="100" width="18" height="50" rx="6" fill="#00e676"/><rect x="107" y="100" width="18" height="50" rx="6" fill="#00e676"/><ellipse cx="100" cy="100" rx="38" ry="32" fill="#00e676"/><ellipse cx="100" cy="72" rx="26" ry="20" fill="#00e676"/><ellipse cx="84" cy="64" rx="8" ry="13" fill="#00e676" transform="rotate(-15 84 64)"/><ellipse cx="116" cy="64" rx="8" ry="13" fill="#00e676" transform="rotate(15 116 64)"/><ellipse cx="88" cy="78" rx="5" ry="5" fill="#080c10"/><ellipse cx="112" cy="78" rx="5" ry="5" fill="#080c10"/><path d="M70 60 Q60 40 50 35" stroke="#00e676" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M130 60 Q140 40 150 35" stroke="#00e676" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M55 130 Q40 155 35 170" stroke="#00e676" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M145 130 Q160 155 165 170" stroke="#00e676" stroke-width="6" stroke-linecap="round" fill="none"/></svg>
-<svg class="bear-bg" viewBox="0 0 200 200" fill="none"><ellipse cx="100" cy="145" rx="50" ry="28" fill="#ff3d3d" opacity="0.6"/><rect x="72" y="105" width="16" height="48" rx="6" fill="#ff3d3d"/><rect x="112" y="105" width="16" height="48" rx="6" fill="#ff3d3d"/><ellipse cx="100" cy="105" rx="40" ry="34" fill="#ff3d3d"/><ellipse cx="100" cy="75" rx="28" ry="22" fill="#ff3d3d"/><circle cx="78" cy="60" r="12" fill="#ff3d3d"/><circle cx="122" cy="60" r="12" fill="#ff3d3d"/><ellipse cx="88" cy="82" rx="5" ry="5" fill="#080c10"/><ellipse cx="112" cy="82" rx="5" ry="5" fill="#080c10"/><ellipse cx="100" cy="92" rx="10" ry="6" fill="#c62828"/><path d="M55 130 Q38 158 32 172" stroke="#ff3d3d" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M145 130 Q162 158 168 172" stroke="#ff3d3d" stroke-width="6" stroke-linecap="round" fill="none"/></svg>
+<!-- ===== ANIMALS ===== -->
+<div class="animals">
+
+  <!-- BULL (left) -->
+  <svg style="position:absolute;left:-30px;bottom:40px;width:480px;height:480px;opacity:0.9" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="gBull" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="gBull2" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b2"/>
+        <feMergeNode in="b2"/>
+      </filter>
+    </defs>
+    <!-- Outer glow layer -->
+    <g filter="url(#gBull2)" opacity="0.4">
+      <ellipse cx="220" cy="300" rx="160" ry="100" fill="#00e676"/>
+      <ellipse cx="155" cy="175" rx="75" ry="65" fill="#00e676"/>
+    </g>
+    <!-- Main bull illustration -->
+    <g filter="url(#gBull)" stroke="#00e676" stroke-width="2.2" fill="rgba(0,230,118,0.09)" stroke-linejoin="round" stroke-linecap="round">
+      <!-- Left horn -->
+      <path d="M 148 105 C 128 82,100 62,78 38 C 95 56,128 82,145 102" fill="rgba(0,230,118,0.15)"/>
+      <!-- Right horn -->
+      <path d="M 196 98 C 218 74,248 56,272 32 C 254 52,220 74,200 96" fill="rgba(0,230,118,0.15)"/>
+      <!-- Head -->
+      <path d="M 118 108 C 98 130,92 165,108 188 C 122 210,152 222,176 218 C 204 213,228 196,236 174 C 244 152,236 118,220 105 C 204 92,172 86,152 88 C 136 90,124 100,118 108 Z"/>
+      <!-- Snout -->
+      <path d="M 118 188 C 112 205,120 222,140 228 C 160 234,190 230,202 218 C 188 228,162 230,142 224 C 124 218,116 204,118 188 Z"/>
+      <ellipse cx="165" cy="206" rx="42" ry="24" fill="rgba(0,230,118,0.12)"/>
+      <!-- Nostrils -->
+      <ellipse cx="150" cy="210" rx="7" ry="5" fill="#00e676" stroke="none" opacity="0.8"/>
+      <ellipse cx="180" cy="210" rx="7" ry="5" fill="#00e676" stroke="none" opacity="0.8"/>
+      <!-- Eye -->
+      <circle cx="204" cy="135" r="13" fill="rgba(0,230,118,0.2)"/>
+      <circle cx="204" cy="135" r="7" fill="#00e676" stroke="none" opacity="0.9"/>
+      <circle cx="207" cy="132" r="2.5" fill="#fff" stroke="none"/>
+      <!-- Ear -->
+      <path d="M 114 115 C 90 102,80 82,92 66 C 106 80,116 100,118 112 Z" fill="rgba(0,230,118,0.2)"/>
+      <!-- Neck -->
+      <path d="M 218 175 C 250 178,278 188,302 210 C 280 190,252 182,222 182 Z" fill="rgba(0,230,118,0.15)"/>
+      <!-- Shoulder hump -->
+      <ellipse cx="268" cy="222" rx="40" ry="28" fill="rgba(0,230,118,0.12)"/>
+      <!-- Main body -->
+      <path d="M 205 210 C 248 204,318 212,378 238 C 420 258,436 295,426 328 C 416 361,382 376,334 380 C 286 384,232 372,196 360 C 160 348,138 328,134 304 C 130 280,148 252,175 234 C 188 222,198 212,205 210 Z"/>
+      <!-- Front leg 1 -->
+      <path d="M 198 356 C 190 382,188 412,190 440 L 218 440 C 216 412,214 382,215 356 Z"/>
+      <!-- Hoof 1 -->
+      <ellipse cx="204" cy="442" rx="15" ry="7" fill="#00e676" stroke="none" opacity="0.7"/>
+      <!-- Front leg 2 -->
+      <path d="M 235 362 C 230 388,228 416,230 440 L 258 440 C 256 416,253 388,248 362 Z"/>
+      <ellipse cx="244" cy="442" rx="14" ry="7" fill="#00e676" stroke="none" opacity="0.7"/>
+      <!-- Back leg 1 -->
+      <path d="M 332 368 C 327 394,324 420,326 440 L 354 440 C 352 420,349 394,344 368 Z"/>
+      <ellipse cx="340" cy="442" rx="14" ry="7" fill="#00e676" stroke="none" opacity="0.7"/>
+      <!-- Back leg 2 -->
+      <path d="M 368 360 C 364 388,362 416,364 440 L 390 440 C 388 416,385 388,381 360 Z"/>
+      <ellipse cx="377" cy="442" rx="13" ry="7" fill="#00e676" stroke="none" opacity="0.7"/>
+      <!-- Tail -->
+      <path d="M 425 305 C 458 285,468 252,456 225 C 444 218,434 228,438 240" fill="none" stroke-width="5.5"/>
+      <path d="M 456 222 C 468 208,472 196,462 190 C 452 190,445 202,450 216 Z" fill="rgba(0,230,118,0.3)"/>
+    </g>
+    <!-- Upward arrows -->
+    <g fill="#00e676" opacity="0.85" font-family="Arial,sans-serif">
+      <text x="28" y="310" font-size="34" font-weight="bold">↑</text>
+      <text x="52" y="240" font-size="26" font-weight="bold">↑</text>
+      <text x="18" y="390" font-size="28" font-weight="bold">↑</text>
+      <text x="78" y="380" font-size="22" font-weight="bold">↑</text>
+      <text x="8" y="180" font-size="24" font-weight="bold">↑</text>
+      <text x="60" y="155" font-size="18" font-weight="bold">↑</text>
+    </g>
+  </svg>
+
+  <!-- BEAR (right) -->
+  <svg style="position:absolute;right:-20px;bottom:40px;width:440px;height:440px;opacity:0.85" viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="gBear" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="gBear2" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b2"/>
+        <feMergeNode in="b2"/>
+      </filter>
+    </defs>
+    <!-- Outer glow -->
+    <g filter="url(#gBear2)" opacity="0.35">
+      <ellipse cx="220" cy="290" rx="150" ry="95" fill="#ff3d3d"/>
+      <ellipse cx="220" cy="155" rx="90" ry="80" fill="#ff3d3d"/>
+    </g>
+    <!-- Main bear illustration -->
+    <g filter="url(#gBear)" stroke="#ff3d3d" stroke-width="2.2" fill="rgba(255,61,61,0.09)" stroke-linejoin="round" stroke-linecap="round">
+      <!-- Left ear -->
+      <circle cx="148" cy="85" r="28" fill="rgba(255,61,61,0.15)"/>
+      <circle cx="148" cy="85" r="16" fill="rgba(255,61,61,0.1)" stroke="rgba(255,61,61,0.5)"/>
+      <!-- Right ear -->
+      <circle cx="292" cy="85" r="28" fill="rgba(255,61,61,0.15)"/>
+      <circle cx="292" cy="85" r="16" fill="rgba(255,61,61,0.1)" stroke="rgba(255,61,61,0.5)"/>
+      <!-- Head -->
+      <ellipse cx="220" cy="155" rx="88" ry="80"/>
+      <!-- Snout -->
+      <ellipse cx="220" cy="185" rx="48" ry="32" fill="rgba(255,61,61,0.15)"/>
+      <!-- Nostrils -->
+      <ellipse cx="205" cy="182" rx="7" ry="5" fill="#ff3d3d" stroke="none" opacity="0.8"/>
+      <ellipse cx="235" cy="182" rx="7" ry="5" fill="#ff3d3d" stroke="none" opacity="0.8"/>
+      <!-- Eyes -->
+      <circle cx="185" cy="138" r="13" fill="rgba(255,61,61,0.2)"/>
+      <circle cx="185" cy="138" r="7" fill="#ff3d3d" stroke="none" opacity="0.9"/>
+      <circle cx="188" cy="135" r="2.5" fill="#fff" stroke="none"/>
+      <circle cx="255" cy="138" r="13" fill="rgba(255,61,61,0.2)"/>
+      <circle cx="255" cy="138" r="7" fill="#ff3d3d" stroke="none" opacity="0.9"/>
+      <circle cx="258" cy="135" r="2.5" fill="#fff" stroke="none"/>
+      <!-- Mouth -->
+      <path d="M 200 198 Q 220 212 240 198" fill="none" stroke-width="2.5"/>
+      <!-- Neck -->
+      <path d="M 145 210 C 148 230,158 245,180 252 C 162 240,150 228,148 212 Z" fill="rgba(255,61,61,0.12)"/>
+      <path d="M 295 210 C 292 230,282 245,260 252 C 278 240,290 228,292 212 Z" fill="rgba(255,61,61,0.12)"/>
+      <!-- Body -->
+      <path d="M 148 225 C 128 248,118 282,122 315 C 126 348,148 372,180 384 C 212 396,248 396,278 384 C 308 372,328 350,332 318 C 336 286,326 252,308 228 C 288 210,252 200,220 198 C 188 198,162 206,148 225 Z"/>
+      <!-- Left arm with claws -->
+      <path d="M 128 255 C 98 262,75 278,65 300 C 78 285,102 270,128 266 Z"/>
+      <path d="M 68 298 C 58 292,48 298,50 308 C 52 316,62 318,68 312 Z" fill="rgba(255,61,61,0.3)"/>
+      <path d="M 62 308 C 52 305,45 312,48 322 C 51 330,61 330,64 322 Z" fill="rgba(255,61,61,0.3)"/>
+      <path d="M 56 320 C 46 320,40 328,44 337 C 47 344,57 342,58 334 Z" fill="rgba(255,61,61,0.3)"/>
+      <!-- Right arm with claws -->
+      <path d="M 312 255 C 342 262,365 278,375 300 C 362 285,338 270,312 266 Z"/>
+      <path d="M 372 298 C 382 292,392 298,390 308 C 388 316,378 318,372 312 Z" fill="rgba(255,61,61,0.3)"/>
+      <path d="M 378 308 C 388 305,395 312,392 322 C 389 330,379 330,376 322 Z" fill="rgba(255,61,61,0.3)"/>
+      <path d="M 384 320 C 394 320,400 328,396 337 C 393 344,383 342,382 334 Z" fill="rgba(255,61,61,0.3)"/>
+      <!-- Front legs -->
+      <path d="M 170 380 C 165 402,163 422,165 440 L 190 440 C 188 422,186 402,182 380 Z"/>
+      <ellipse cx="178" cy="442" rx="14" ry="7" fill="#ff3d3d" stroke="none" opacity="0.7"/>
+      <path d="M 250 380 C 252 402,252 422,250 440 L 275 440 C 273 422,271 402,268 380 Z"/>
+      <ellipse cx="262" cy="442" rx="14" ry="7" fill="#ff3d3d" stroke="none" opacity="0.7"/>
+      <!-- Belly highlight -->
+      <ellipse cx="220" cy="310" rx="55" ry="42" fill="rgba(255,61,61,0.06)" stroke="rgba(255,61,61,0.2)" stroke-width="1"/>
+    </g>
+    <!-- Downward arrows -->
+    <g fill="#ff3d3d" opacity="0.85" font-family="Arial,sans-serif">
+      <text x="388" y="310" font-size="34" font-weight="bold">↓</text>
+      <text x="370" y="240" font-size="26" font-weight="bold">↓</text>
+      <text x="395" y="390" font-size="28" font-weight="bold">↓</text>
+      <text x="352" y="380" font-size="22" font-weight="bold">↓</text>
+      <text x="405" y="180" font-size="24" font-weight="bold">↓</text>
+      <text x="368" y="155" font-size="18" font-weight="bold">↓</text>
+    </g>
+  </svg>
+
+</div>
 
 <!-- ===== AUTH SCREEN ===== -->
 <div class="auth-screen" id="authScreen">
   <div class="auth-box">
     <div class="auth-logo">
-      <div class="logo-icon">📈</div>
+      <div class="li">📈</div>
       <h2>Trader<span>Track</span></h2>
-      <p id="authSubtitle">منصة تتبع الصفقات الاحترافية</p>
+      <p id="authSub">منصة تتبع الصفقات الاحترافية</p>
     </div>
-
-    <!-- Setup (first time) -->
     <div id="setupPanel">
       <div class="setup-badge">👑 إنشاء حساب المالك — أول مرة فقط</div>
       <div class="err-msg" id="setupErr"></div>
@@ -163,22 +300,17 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       <div class="field"><label>تأكيد كلمة المرور</label><input id="setupPass2" type="password" placeholder="أعد الكتابة"></div>
       <button class="btn-primary" onclick="createOwner()">إنشاء حساب المالك 👑</button>
     </div>
-
-    <!-- Login -->
     <div id="loginPanel" style="display:none">
       <div class="err-msg" id="loginErr"></div>
       <div class="field"><label>اسم المستخدم</label><input id="loginUser" placeholder="اسم المستخدم" autocomplete="off"></div>
       <div class="field"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="كلمة المرور"></div>
       <button class="btn-primary" onclick="doLogin()">تسجيل الدخول</button>
-      <div class="auth-msg" style="margin-top:10px;font-size:11px;color:var(--muted)">للمالك فقط: <span onclick="showOwnerReset()" style="color:var(--gold);cursor:pointer">نسيت كلمة المرور؟</span></div>
     </div>
   </div>
 </div>
 
 <!-- ===== APP SCREEN ===== -->
 <div id="appScreen">
-
-  <!-- Header -->
   <div class="header">
     <div class="logo"><div class="logo-sm">📈</div>Trader<span>Track</span></div>
     <div class="header-right">
@@ -188,16 +320,12 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     </div>
   </div>
 
-  <!-- Main dashboard -->
   <div class="main">
     <div>
-      <!-- Calendar -->
       <div class="card">
         <div class="card-title">📅 تقويم الصفقات — <span id="monthLabel" style="color:var(--green);margin-right:4px"></span></div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
-
-      <!-- Stats -->
       <div class="stats-bar">
         <div class="stat-card"><div><div class="stat-label">Total Trades:</div><div class="stat-value" id="totalTrades">0</div></div></div>
         <div class="stat-card">
@@ -206,15 +334,11 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
         </div>
         <div class="stat-card"><div><div class="stat-label">Net Profit and Loss:</div><div class="stat-value green" id="netPnl">$0.00</div></div></div>
       </div>
-
-      <!-- Users panel (owner only) -->
       <div class="card users-panel" id="usersPanel">
         <div class="card-title">👥 المستخدمون</div>
         <div id="usersList"></div>
       </div>
     </div>
-
-    <!-- Sidebar -->
     <div>
       <div class="card">
         <div class="card-title">💰 حاسبة اللوت</div>
@@ -241,7 +365,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
     <div class="form-grp"><label class="form-lbl">زوج العملات</label><select class="form-ctl" id="fPair"><option>XAU/USD (ذهب)</option><option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option></select></div>
     <div class="form-grp"><label class="form-lbl">نوع الصفقة</label><div class="radio-row"><label><input type="radio" name="fType" value="buy" checked> شراء 📈</label><label><input type="radio" name="fType" value="sell"> بيع 📉</label></div></div>
     <div class="form-grp"><label class="form-lbl">المبلغ ($)</label><input type="number" class="form-ctl" id="fAmt" placeholder="مثال: 10"></div>
-    <div class="form-grp"><label class="form-lbl">ماذا تعلمت؟</label><textarea class="form-ctl" id="fLesson" rows="2" placeholder="صبرت على الصفقة..."></textarea></div>
+    <div class="form-grp"><label class="form-lbl">ماذا تعلمت؟</label><textarea class="form-ctl" id="fLesson" rows="2" placeholder="ملاحظاتك..."></textarea></div>
     <div class="trade-btns"><button class="btn-win" onclick="submitTrade('win')">✓ ربح</button><button class="btn-loss" onclick="submitTrade('loss')">✗ خسارة</button></div>
   </div>
 </div>
@@ -259,43 +383,32 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
   </div>
 </div>
 
-<!-- Ticker -->
 <div class="ticker"><div class="ticker-inner" id="ticker"></div></div>
 
 <script>
-// ===== SIMPLE HASH =====
-function simpleHash(str){let h=5381;for(let i=0;i<str.length;i++)h=(h*33)^str.charCodeAt(i);return(h>>>0).toString(36)}
-
-// ===== STORAGE HELPERS =====
+function simpleHash(s){let h=5381;for(let i=0;i<s.length;i++)h=(h*33)^s.charCodeAt(i);return(h>>>0).toString(36)}
 function getData(){return JSON.parse(localStorage.getItem('tt_data')||'{"users":[],"trades":{}}')}
 function saveData(d){localStorage.setItem('tt_data',JSON.stringify(d))}
-function getSession(){return JSON.parse(sessionStorage.getItem('tt_session')||'null')}
-function saveSession(u){sessionStorage.setItem('tt_session',JSON.stringify(u))}
-function clearSession(){sessionStorage.removeItem('tt_session')}
+function getSession(){return JSON.parse(sessionStorage.getItem('tt_s')||'null')}
+function saveSession(u){sessionStorage.setItem('tt_s',JSON.stringify(u))}
+function clearSession(){sessionStorage.removeItem('tt_s')}
 
-// ===== INIT =====
 const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 const dayNames=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const now=new Date();
-let selDay=null;
-let currentUser=null;
+let selDay=null,currentUser=null;
 
 function init(){
   buildTicker();
   const d=getData();
   const owner=d.users.find(u=>u.role==='owner');
-  if(!owner){
-    document.getElementById('setupPanel').style.display='block';
-    document.getElementById('loginPanel').style.display='none';
-    return;
-  }
+  if(!owner){document.getElementById('setupPanel').style.display='block';document.getElementById('loginPanel').style.display='none';return}
   document.getElementById('setupPanel').style.display='none';
   document.getElementById('loginPanel').style.display='block';
-  const sess=getSession();
-  if(sess){const u=d.users.find(x=>x.username===sess.username);if(u)return enterApp(u)}
+  const s=getSession();
+  if(s){const u=d.users.find(x=>x.username===s.username);if(u)enterApp(u)}
 }
 
-// ===== SETUP OWNER =====
 function createOwner(){
   const u=document.getElementById('setupUser').value.trim();
   const p=document.getElementById('setupPass').value;
@@ -304,19 +417,17 @@ function createOwner(){
   err.style.display='none';
   if(!u||!p){err.textContent='يرجى تعبئة جميع الحقول';err.style.display='block';return}
   if(p!==p2){err.textContent='كلمتا المرور غير متطابقتين';err.style.display='block';return}
-  if(p.length<4){err.textContent='كلمة المرور يجب أن تكون 4 أحرف على الأقل';err.style.display='block';return}
+  if(p.length<4){err.textContent='كلمة المرور 4 أحرف على الأقل';err.style.display='block';return}
   const d=getData();
-  if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم موجود مسبقاً';err.style.display='block';return}
   d.users.push({username:u,password:simpleHash(p),role:'owner'});
   d.trades[u]=[];
   saveData(d);
-  alert('✅ تم إنشاء حساب المالك بنجاح! يمكنك تسجيل الدخول الآن.');
+  alert('✅ تم إنشاء حساب المالك!');
   document.getElementById('setupPanel').style.display='none';
   document.getElementById('loginPanel').style.display='block';
   document.getElementById('loginUser').value=u;
 }
 
-// ===== LOGIN =====
 function doLogin(){
   const u=document.getElementById('loginUser').value.trim();
   const p=document.getElementById('loginPass').value;
@@ -326,35 +437,25 @@ function doLogin(){
   const d=getData();
   const user=d.users.find(x=>x.username===u&&x.password===simpleHash(p));
   if(!user){err.textContent='اسم المستخدم أو كلمة المرور غير صحيحة';err.style.display='block';return}
-  saveSession(user);
-  enterApp(user);
+  saveSession(user);enterApp(user);
 }
-
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 
-// ===== ENTER APP =====
 function enterApp(user){
   currentUser=user;
   document.getElementById('authScreen').style.display='none';
   document.getElementById('appScreen').style.display='flex';
-  // Badge
   const badge=document.getElementById('userBadge');
   badge.className=user.role==='owner'?'owner-badge':'user-badge';
-  badge.innerHTML=`<span>${user.role==='owner'?'👑':'👤'}</span><div class="av" style="background:${user.role==='owner'?'linear-gradient(135deg,#ffd700,#ff8f00)':'linear-gradient(135deg,#00e676,#00bcd4)'};color:#000">${user.username.charAt(0).toUpperCase()}</div><span>${user.username}</span>`;
-  // Owner extras
-  if(user.role==='owner'){
-    document.getElementById('btnAddUser').style.display='block';
-    document.getElementById('usersPanel').style.display='block';
-    renderUsersList();
-  }
-  buildCal();
-  updateStats();
+  document.getElementById('avLetter').textContent=user.username.charAt(0).toUpperCase();
+  document.getElementById('badgeName').textContent=user.username;
+  badge.querySelector('span').textContent=user.role==='owner'?'👑':'👤';
+  if(user.role==='owner'){document.getElementById('btnAddUser').style.display='block';document.getElementById('usersPanel').style.display='block';renderUsersList()}
+  buildCal();updateStats();
 }
 
-// ===== LOGOUT =====
 function logout(){clearSession();location.reload()}
 
-// ===== ADD USER =====
 function openAddUser(){document.getElementById('addUserModal').style.display='flex'}
 function closeAddUser(){document.getElementById('addUserModal').style.display='none'}
 function addUser(){
@@ -365,47 +466,30 @@ function addUser(){
   err.style.display='none';
   if(!u||!p){err.textContent='يرجى تعبئة جميع الحقول';err.style.display='block';return}
   const d=getData();
-  if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم موجود مسبقاً';err.style.display='block';return}
-  d.users.push({username:u,password:simpleHash(p),role:r});
-  d.trades[u]=[];
-  saveData(d);
-  closeAddUser();
-  document.getElementById('nuUser').value='';
-  document.getElementById('nuPass').value='';
-  renderUsersList();
-  alert(`✅ تم إضافة المستخدم "${u}" بنجاح!`);
+  if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم موجود';err.style.display='block';return}
+  d.users.push({username:u,password:simpleHash(p),role:r});d.trades[u]=[];saveData(d);
+  closeAddUser();document.getElementById('nuUser').value='';document.getElementById('nuPass').value='';
+  renderUsersList();alert(`✅ تم إضافة "${u}"`);
 }
-
+function deleteUser(un){
+  if(!confirm(`حذف "${un}"؟`))return;
+  const d=getData();d.users=d.users.filter(u=>u.username!==un);delete d.trades[un];saveData(d);renderUsersList();
+}
 function renderUsersList(){
   const d=getData();
   const list=document.getElementById('usersList');
   const others=d.users.filter(u=>u.username!==currentUser.username);
-  if(!others.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">لا يوجد مستخدمون بعد</div>';return}
-  list.innerHTML=others.map(u=>`
-    <div class="user-item">
-      <div class="user-info-row">
-        <div class="user-av">${u.username.charAt(0).toUpperCase()}</div>
-        <div><div class="user-name">${u.username}</div><div class="user-role">${u.role==='owner'?'👑 مالك':'👤 مستخدم'}</div></div>
-      </div>
-      <button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button>
-    </div>`).join('');
+  if(!others.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">لا يوجد مستخدمون</div>';return}
+  list.innerHTML=others.map(u=>`<div class="user-item"><div class="u-row"><div class="u-av">${u.username.charAt(0).toUpperCase()}</div><div><div class="u-name">${u.username}</div><div class="u-role">${u.role==='owner'?'👑 مالك':'👤 مستخدم'}</div></div></div><button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button></div>`).join('');
 }
 
-function deleteUser(username){
-  if(!confirm(`هل تريد حذف المستخدم "${username}"؟`))return;
-  const d=getData();
-  d.users=d.users.filter(u=>u.username!==username);
-  delete d.trades[username];
-  saveData(d);
-  renderUsersList();
-}
+function getUserTrades(){const d=getData();return d.trades[currentUser.username]||[]}
+function saveUserTrades(t){const d=getData();d.trades[currentUser.username]=t;saveData(d)}
 
-// ===== CALENDAR =====
 function buildCal(){
   document.getElementById('monthLabel').textContent=months[now.getMonth()]+' '+now.getFullYear();
-  const g=document.getElementById('calGrid');
-  g.innerHTML='';
-  dayNames.forEach(d=>{const h=document.createElement('div');h.className='cal-header';h.textContent=d;g.appendChild(h)});
+  const g=document.getElementById('calGrid');g.innerHTML='';
+  dayNames.forEach(d=>{const h=document.createElement('div');h.className='cal-hdr';h.textContent=d;g.appendChild(h)});
   const total=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
   const first=new Date(now.getFullYear(),now.getMonth(),1).getDay();
   const trades=getUserTrades();
@@ -424,24 +508,10 @@ function buildCal(){
   }
 }
 
-function getUserTrades(){
-  const d=getData();
-  return d.trades[currentUser.username]||[];
-}
-
-function saveUserTrades(trades){
-  const d=getData();
-  d.trades[currentUser.username]=trades;
-  saveData(d);
-}
-
-// ===== TRADE MODAL =====
-function openTradeModal(day){
-  selDay=day;
-  document.getElementById('mdDay').textContent=day;
-  document.getElementById('fAmt').value='';
-  document.getElementById('fLesson').value='';
-  const ex=getUserTrades().find(t=>t.day===day);
+function openTradeModal(d){
+  selDay=d;document.getElementById('mdDay').textContent=d;
+  document.getElementById('fAmt').value='';document.getElementById('fLesson').value='';
+  const ex=getUserTrades().find(t=>t.day===d);
   if(ex){document.getElementById('fAmt').value=ex.amount;document.getElementById('fLesson').value=ex.lesson||''}
   document.getElementById('tradeModal').style.display='flex';
 }
@@ -454,11 +524,9 @@ function submitTrade(result){
   const idx=trades.findIndex(t=>t.day===selDay);
   const entry={day:selDay,result,amount:amt,pair:document.getElementById('fPair').value,type:document.querySelector('input[name="fType"]:checked').value,lesson:document.getElementById('fLesson').value};
   if(idx>=0)trades[idx]=entry;else trades.push(entry);
-  saveUserTrades(trades);
-  closeTradeModal();buildCal();updateStats();
+  saveUserTrades(trades);closeTradeModal();buildCal();updateStats();
 }
 
-// ===== STATS =====
 function updateStats(){
   const trades=getUserTrades();
   const wins=trades.filter(t=>t.result==='win').length;
@@ -467,10 +535,9 @@ function updateStats(){
   document.getElementById('totalTrades').textContent=total;
   document.getElementById('winRate').textContent=wr+'%';
   document.getElementById('circTxt').textContent=wr+'%';
-  const circ=document.getElementById('circFill');
-  const dash=126;
-  circ.style.strokeDashoffset=dash-(dash*wr/100);
-  circ.style.stroke=wr>=50?'var(--green)':'var(--red)';
+  const cf=document.getElementById('circFill');
+  cf.style.strokeDashoffset=126-(126*wr/100);
+  cf.style.stroke=wr>=50?'var(--green)':'var(--red)';
   document.getElementById('circTxt').style.color=wr>=50?'var(--green)':'var(--red)';
   const net=trades.reduce((s,t)=>t.result==='win'?s+t.amount:s-t.amount,0);
   const el=document.getElementById('netPnl');
@@ -481,7 +548,6 @@ function updateStats(){
   document.getElementById('wkL').textContent=rec.filter(t=>t.result==='loss').length;
 }
 
-// ===== LOT CALC =====
 function calcLot(){
   const c=parseFloat(document.getElementById('cap').value);
   const r=parseFloat(document.getElementById('rsk').value);
@@ -489,15 +555,12 @@ function calcLot(){
   document.getElementById('lotRes').textContent='حجم اللوت: '+(c>0&&r>0&&s>0?((c*r/100)/(s*10)).toFixed(2):'0.00');
 }
 
-// ===== TICKER =====
 function buildTicker(){
   const pairs=[{s:'XAU/USD',p:'3213.08',ch:'+0.087%'},{s:'EUR/USD',p:'1.0823',ch:'+0.043%'},{s:'GBP/USD',p:'1.2711',ch:'-0.021%'},{s:'USD/JPY',p:'157.32',ch:'+0.112%'},{s:'BTC/USD',p:'67,450',ch:'+1.23%'},{s:'NAS100',p:'19,820',ch:'+0.54%'},{s:'OIL/USD',p:'82.40',ch:'-0.31%'},{s:'SPX500',p:'5,248',ch:'+0.18%'}];
   const t=document.getElementById('ticker');
   const mk=()=>pairs.map(p=>`<span class="tick-item"><span class="tick-sym">${p.s}</span><span>${p.p}</span><span class="${p.ch.startsWith('-')?'tick-dn':'tick-up'}">${p.ch}</span></span>`).join('');
   t.innerHTML=mk()+mk();
 }
-
-function showOwnerReset(){alert('تواصل مع مطور التطبيق لإعادة تعيين كلمة المرور.')}
 
 init();
 </script>
