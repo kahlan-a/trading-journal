@@ -1,321 +1,382 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forex Trading Journal</title>
-    <style>
-        :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --border-color: #30363d;
-            --text-main: #c9d1d9;
-            --text-muted: #8b949e;
-            --profit-green: #00ff88;
-            --loss-red: #ff4444;
-            --accent-gold: #ffd700;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TraderTrack</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
+:root{
+  --bg:#080c10;
+  --card:#0d1520;
+  --card2:#101a28;
+  --border:#1a2d45;
+  --green:#00e676;
+  --green2:#00ff88;
+  --red:#ff3d3d;
+  --gold:#ffc107;
+  --text:#c8d8e8;
+  --muted:#4a6080;
+  --glow:0 0 20px rgba(0,230,118,0.3);
+  --glow-red:0 0 20px rgba(255,61,61,0.3);
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;overflow-x:hidden}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+/* Background grid */
+body::before{content:'';position:fixed;top:0;left:0;width:100%;height:100%;background-image:linear-gradient(rgba(0,230,118,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,230,118,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
 
-        .header { width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .logo { font-size: 24px; font-weight: bold; color: #fff; }
-        .logo span { color: var(--profit-green); }
-        .user-info { display: flex; align-items: center; gap: 15px; }
-        .role-badge { background: var(--card-bg); padding: 5px 10px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border-color); }
-        .role-badge.owner { color: var(--accent-gold); border-color: var(--accent-gold); }
-        .btn-logout { background: transparent; border: 1px solid var(--loss-red); color: var(--loss-red); padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+/* Bull SVG background */
+.bull-bg{position:fixed;left:-60px;bottom:80px;width:420px;height:420px;opacity:0.13;pointer-events:none;z-index:0;filter:drop-shadow(0 0 30px #00e676)}
+.bear-bg{position:fixed;right:-40px;bottom:80px;width:380px;height:380px;opacity:0.1;pointer-events:none;z-index:0;filter:drop-shadow(0 0 30px #ff3d3d)}
 
-        .dashboard { width: 100%; max-width: 1200px; display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+/* Header */
+.header{position:relative;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:14px 28px;background:linear-gradient(180deg,rgba(8,12,16,0.98) 0%,rgba(13,21,32,0.95) 100%);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-size:22px;font-weight:700;color:#fff}
+.logo-icon{width:34px;height:34px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 14px rgba(0,230,118,0.5)}
+.logo span{color:var(--green)}
+.header-right{display:flex;align-items:center;gap:12px}
+.owner-badge{display:flex;align-items:center;gap:8px;background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.4);border-radius:24px;padding:5px 14px;font-size:13px;color:var(--gold)}
+.owner-badge .crown{font-size:16px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.btn-logout{background:transparent;border:1px solid rgba(255,61,61,0.4);color:var(--red);padding:7px 16px;border-radius:8px;cursor:pointer;font-size:13px;transition:0.2s}
+.btn-logout:hover{background:rgba(255,61,61,0.1)}
 
-        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-        .card-title { font-size: 18px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+/* Main layout */
+.main{position:relative;z-index:5;display:grid;grid-template-columns:1fr 300px;gap:16px;padding:16px 24px;flex:1}
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        .day-header { text-align: center; color: var(--text-muted); font-size: 14px; font-weight: bold; }
-        .day-cell { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; min-height: 80px; cursor: pointer; transition: 0.2s; position: relative; }
-        .day-cell:hover { border-color: var(--profit-green); }
-        .day-num { font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #fff; }
-        .trade-indicator { position: absolute; bottom: 5px; left: 5px; font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-        .win-ind { background: rgba(0, 255, 136, 0.2); color: var(--profit-green); }
-        .loss-ind { background: rgba(255, 68, 68, 0.2); color: var(--loss-red); }
-        .empty-cell { background: transparent; border: none; cursor: default; }
+/* Card */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:14px;backdrop-filter:blur(4px)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:14px;color:#e0eaf5;display:flex;align-items:center;gap:8px}
+.card-title .icon{font-size:18px}
 
-        .sidebar .card-title { justify-content: center; }
-        .calc-input { width: 100%; padding: 10px; margin-bottom: 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; }
-        .calc-result { background: rgba(0, 255, 136, 0.1); border: 1px solid var(--profit-green); color: var(--profit-green); padding: 15px; text-align: center; border-radius: 6px; font-size: 18px; font-weight: bold; margin-top: 10px; }
+/* Calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.cal-header{text-align:center;font-size:11px;color:var(--muted);font-weight:600;padding:4px 0;text-transform:uppercase}
+.cal-cell{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:7px 5px;min-height:68px;cursor:pointer;transition:0.2s;position:relative;overflow:hidden}
+.cal-cell:hover{border-color:var(--green);background:rgba(0,230,118,0.05);box-shadow:var(--glow)}
+.cal-cell.today{border-color:var(--green);background:rgba(0,230,118,0.08);box-shadow:0 0 12px rgba(0,230,118,0.2)}
+.cal-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-num{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px}
+.cal-cell.today .cal-num{color:var(--green)}
+.cal-arrow{position:absolute;bottom:5px;right:5px;font-size:14px}
+.cal-cell.win-cell{border-color:rgba(0,230,118,0.4);background:rgba(0,230,118,0.06)}
+.cal-cell.loss-cell{border-color:rgba(255,61,61,0.4);background:rgba(255,61,61,0.06)}
+.cal-label{font-size:9px;padding:1px 5px;border-radius:3px;margin-top:2px;display:inline-block}
+.win-label{background:rgba(0,230,118,0.15);color:var(--green)}
+.loss-label{background:rgba(255,61,61,0.15);color:var(--red)}
 
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
-        .stat-bar-container { width: 100%; height: 10px; background: var(--bg-color); border-radius: 5px; overflow: hidden; margin-top: 5px; margin-bottom: 20px; display: flex; }
-        .stat-bar-win { height: 100%; background: var(--profit-green); transition: width 0.3s; }
-        .stat-bar-loss { height: 100%; background: var(--loss-red); transition: width 0.3s; }
-        .owner-only { display: none; }
+/* Stats bottom */
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stat-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:14px}
+.stat-label{font-size:11px;color:var(--muted);margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:700;color:#fff}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 12px; width: 90%; max-width: 500px; border: 1px solid var(--border-color); }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-size: 14px; color: var(--text-muted); }
-        .form-control { width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: #fff; }
-        .radio-group { display: flex; gap: 15px; }
-        .btn-submit { width: 100%; padding: 12px; background: var(--profit-green); color: #000; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-loss { background: var(--loss-red); color: #fff; margin-left: 10px; }
-        .close-modal { float: left; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+/* Circular progress */
+.circle-wrap{position:relative;width:54px;height:54px;flex-shrink:0}
+.circle-wrap svg{transform:rotate(-90deg)}
+.circle-track{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:5}
+.circle-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset 0.5s;stroke-dasharray:138;stroke-dashoffset:138}
+.circle-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:12px;font-weight:700;color:var(--green)}
 
-        @media (max-width: 768px) {
-            .dashboard { grid-template-columns: 1fr; }
-            .calendar-grid { gap: 5px; }
-            .day-cell { min-height: 55px; padding: 6px; }
-        }
-    </style>
+/* Sidebar */
+.calc-input{width:100%;padding:10px 12px;margin-bottom:9px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:14px;transition:0.2s}
+.calc-input:focus{outline:none;border-color:var(--green);box-shadow:0 0 8px rgba(0,230,118,0.2)}
+.calc-input::placeholder{color:var(--muted)}
+.calc-result{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.3);color:var(--green);padding:12px 16px;text-align:center;border-radius:8px;font-size:16px;font-weight:700;margin-top:4px;box-shadow:0 0 10px rgba(0,230,118,0.15)}
+.calc-hint{font-size:10px;color:var(--muted);margin-top:8px;text-align:center}
+
+.week-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.week-row:last-child{border-bottom:none}
+.week-label{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.week-val{font-size:18px;font-weight:700}
+
+/* Ticker */
+.ticker{position:fixed;bottom:0;left:0;width:100%;background:rgba(8,12,16,0.95);border-top:1px solid var(--border);padding:6px 0;overflow:hidden;z-index:20}
+.ticker-inner{display:flex;gap:40px;white-space:nowrap;animation:scroll 35s linear infinite}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+.tick-sym{color:#fff;font-weight:600}
+.tick-up{color:var(--green)}
+.tick-dn{color:var(--red)}
+
+/* Modal overlay (fixed-height faux viewport) */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.75);z-index:100;justify-content:center;align-items:center}
+.modal-box{background:#0d1a28;border:1px solid var(--border);border-radius:16px;padding:26px;width:90%;max-width:460px;position:relative}
+.modal-title{font-size:16px;font-weight:700;color:#fff;margin-bottom:18px}
+.close-btn{position:absolute;top:14px;left:16px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+.form-lbl{font-size:12px;color:var(--muted);margin-bottom:5px;display:block}
+.form-grp{margin-bottom:13px}
+.form-ctl{width:100%;padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;color:#fff;font-size:13px}
+.form-ctl:focus{outline:none;border-color:var(--green)}
+.form-ctl option{background:#0d1a28}
+.radio-row{display:flex;gap:20px;font-size:13px}
+.trade-btns{display:flex;gap:10px;margin-top:6px}
+.btn-win{flex:1;padding:11px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px}
+.btn-loss{flex:1;padding:11px;background:linear-gradient(135deg,#c62828,#ff3d3d);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px}
+.amount-row{display:flex;gap:8px;align-items:center}
+.amount-row .form-ctl{flex:1}
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="logo">🐂 Trading <span>Journal</span> 🐻</div>
-        <div class="user-info">
-            <button class="owner-only" style="background:var(--accent-gold); color:#000; border:none; padding:8px 12px; border-radius:6px; cursor:pointer;">+ إضافة مستخدم</button>
-            <div class="role-badge owner" id="roleBadge">Owner</div>
-            <button class="btn-logout">تسجيل خروج</button>
-        </div>
+<!-- Bull SVG -->
+<svg class="bull-bg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="100" cy="140" rx="55" ry="30" fill="#00e676" opacity="0.6"/>
+  <rect x="75" y="100" width="18" height="50" rx="6" fill="#00e676"/>
+  <rect x="107" y="100" width="18" height="50" rx="6" fill="#00e676"/>
+  <ellipse cx="100" cy="100" rx="38" ry="32" fill="#00e676"/>
+  <ellipse cx="100" cy="72" rx="26" ry="20" fill="#00e676"/>
+  <ellipse cx="84" cy="64" rx="8" ry="13" fill="#00e676" transform="rotate(-15 84 64)"/>
+  <ellipse cx="116" cy="64" rx="8" ry="13" fill="#00e676" transform="rotate(15 116 64)"/>
+  <ellipse cx="88" cy="78" rx="5" ry="5" fill="#080c10"/>
+  <ellipse cx="112" cy="78" rx="5" ry="5" fill="#080c10"/>
+  <path d="M70 60 Q60 40 50 35" stroke="#00e676" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M130 60 Q140 40 150 35" stroke="#00e676" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <path d="M55 130 Q40 155 35 170" stroke="#00e676" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M145 130 Q160 155 165 170" stroke="#00e676" stroke-width="6" stroke-linecap="round" fill="none"/>
+</svg>
+
+<!-- Bear SVG -->
+<svg class="bear-bg" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="100" cy="145" rx="50" ry="28" fill="#ff3d3d" opacity="0.6"/>
+  <rect x="72" y="105" width="16" height="48" rx="6" fill="#ff3d3d"/>
+  <rect x="112" y="105" width="16" height="48" rx="6" fill="#ff3d3d"/>
+  <ellipse cx="100" cy="105" rx="40" ry="34" fill="#ff3d3d"/>
+  <ellipse cx="100" cy="75" rx="28" ry="22" fill="#ff3d3d"/>
+  <circle cx="78" cy="60" r="12" fill="#ff3d3d"/>
+  <circle cx="122" cy="60" r="12" fill="#ff3d3d"/>
+  <ellipse cx="88" cy="82" rx="5" ry="5" fill="#080c10"/>
+  <ellipse cx="112" cy="82" rx="5" ry="5" fill="#080c10"/>
+  <ellipse cx="100" cy="92" rx="10" ry="6" fill="#c62828"/>
+  <path d="M55 130 Q38 158 32 172" stroke="#ff3d3d" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <path d="M145 130 Q162 158 168 172" stroke="#ff3d3d" stroke-width="6" stroke-linecap="round" fill="none"/>
+</svg>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">📈</div>
+    Trader<span>Track</span>
+  </div>
+  <div class="header-right">
+    <div class="owner-badge">
+      <span class="crown">👑</span>
+      <div class="avatar">K</div>
+      Owner
+    </div>
+    <button class="btn-logout">تسجيل خروج</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <!-- Left -->
+  <div>
+    <div class="card">
+      <div class="card-title"><span class="icon">📅</span> تقويم الصفقات — <span id="monthLabel" style="color:var(--green);margin-right:4px"></span></div>
+      <div class="cal-grid" id="calGrid"></div>
     </div>
 
-    <div class="dashboard">
-        <div class="main-content">
-            <div class="card">
-                <div class="card-title">📅 تقويم الصفقات — <span id="currentMonth"></span></div>
-                <div class="calendar-grid" id="calendarGrid"></div>
-            </div>
-
-            <div class="card">
-                <div class="card-title">📊 الإحصائيات الشهرية</div>
-                <div class="stat-row">
-                    <span>إجمالي الصفقات:</span>
-                    <span id="totalTrades">0</span>
-                </div>
-                <div class="stat-row">
-                    <span style="color:var(--profit-green)">نسبة النجاح (Win Rate):</span>
-                    <span id="winRate">—</span>
-                </div>
-                <div class="stat-bar-container">
-                    <div class="stat-bar-win" id="winBar" style="width:50%"></div>
-                    <div class="stat-bar-loss" id="lossBar" style="width:50%"></div>
-                </div>
-                <div class="stat-row">
-                    <span>صافي الربح/الخسارة:</span>
-                    <span id="netPnl" style="color:var(--profit-green)">$0</span>
-                </div>
-            </div>
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Total Trades:</div>
+          <div class="stat-value" id="totalTrades">0</div>
         </div>
-
-        <div class="sidebar">
-            <div class="card">
-                <div class="card-title">💰 حاسبة حجم اللوت</div>
-                <input type="number" class="calc-input" id="capital" placeholder="رأس المال ($)">
-                <input type="number" class="calc-input" id="riskPerc" placeholder="نسبة المخاطرة %">
-                <input type="number" class="calc-input" id="slPips" placeholder="وقف الخسارة (بونكت)">
-                <div class="calc-result" id="lotResult">حجم اللوت: 0.00</div>
-                <p style="font-size:11px; color:var(--text-muted); margin-top:10px;">* (رأس المال × %) / (SL × 10)</p>
-            </div>
-
-            <div class="card">
-                <div class="card-title">🏆 ملخص الأسبوع</div>
-                <div class="stat-row">
-                    <span>صفقات ناجحة:</span>
-                    <span id="weekWins" style="color:var(--profit-green)">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>صفقات خاسرة:</span>
-                    <span id="weekLosses" style="color:var(--loss-red)">0</span>
-                </div>
-            </div>
+      </div>
+      <div class="stat-card">
+        <div class="circle-wrap">
+          <svg width="54" height="54" viewBox="0 0 54 54">
+            <circle class="circle-track" cx="27" cy="27" r="22"/>
+            <circle class="circle-fill" id="circFill" cx="27" cy="27" r="22"/>
+          </svg>
+          <div class="circle-text" id="circText">0%</div>
         </div>
+        <div>
+          <div class="stat-label">Success Rate:</div>
+          <div class="stat-value green" id="winRate">0%</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Net Profit and Loss:</div>
+          <div class="stat-value green" id="netPnl">$0.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right sidebar -->
+  <div>
+    <div class="card">
+      <div class="card-title"><span class="icon">💰</span> حاسبة اللوت</div>
+      <input class="calc-input" id="cap" type="number" placeholder="رأس المال ($)" oninput="calcLot()">
+      <input class="calc-input" id="rsk" type="number" placeholder="نسبة المخاطرة %" oninput="calcLot()">
+      <input class="calc-input" id="slp" type="number" placeholder="وقف الخسارة (بونكت)" oninput="calcLot()">
+      <div class="calc-result" id="lotRes">حجم اللوت: 0.00</div>
+      <div class="calc-hint">* (% × رأس المال) / (SL × 10)</div>
     </div>
 
-    <div class="modal" id="tradeModal">
-        <div class="modal-content">
-            <button class="close-modal" onclick="closeModal()">×</button>
-            <h3 style="margin-bottom:20px;">تسجيل صفقة يوم <span id="modalDayNum"></span></h3>
-
-            <div class="form-group">
-                <label>زوج العملات</label>
-                <select class="form-control" id="pair">
-                    <option>EUR/USD</option>
-                    <option>GBP/USD</option>
-                    <option>USD/JPY</option>
-                    <option>XAU/USD (ذهب)</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label>نوع الصفقة</label>
-                <div class="radio-group">
-                    <label><input type="radio" name="type" value="buy" checked> شراء (Buy) 📈</label>
-                    <label><input type="radio" name="type" value="sell"> بيع (Sell) 📉</label>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>النتيجة والمبلغ</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="number" class="form-control" id="tradeAmount" placeholder="المبلغ ($)">
-                    <button class="btn-submit" style="width:auto; padding:10px 20px;" onclick="submitTrade('win')">نجاح ✓</button>
-                    <button class="btn-submit btn-loss" style="width:auto; padding:10px 20px;" onclick="submitTrade('loss')">خسارة ✗</button>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>نسبة من الحساب %</label>
-                <input type="number" class="form-control" id="tradePerc" placeholder="مثال: 2">
-            </div>
-
-            <div class="form-group">
-                <label>ماذا تعلمت اليوم؟ 📝</label>
-                <textarea class="form-control" id="tradeLesson" rows="3" placeholder="صبرت على الصفقة، أو خرجت مبكراً..."></textarea>
-            </div>
-        </div>
+    <div class="card">
+      <div class="card-title"><span class="icon">🏆</span> ملخص الأسبوع</div>
+      <div class="week-row">
+        <span class="week-label">🥇 ناجحة:</span>
+        <span class="week-val" id="wkW" style="color:var(--green)">0</span>
+      </div>
+      <div class="week-row">
+        <span class="week-label">👎 خاسرة:</span>
+        <span class="week-val" id="wkL" style="color:var(--red)">0</span>
+      </div>
     </div>
+  </div>
+</div>
 
-    <script>
-        let currentUserRole = 'owner';
-        if (currentUserRole === 'owner') {
-            document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'block');
-        }
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <button class="close-btn" onclick="closeModal()">×</button>
+    <div class="modal-title">📝 تسجيل صفقة — يوم <span id="mdDay"></span></div>
+    <div class="form-grp">
+      <label class="form-lbl">زوج العملات</label>
+      <select class="form-ctl" id="fPair">
+        <option>XAU/USD (ذهب)</option>
+        <option>EUR/USD</option>
+        <option>GBP/USD</option>
+        <option>USD/JPY</option>
+      </select>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">نوع الصفقة</label>
+      <div class="radio-row">
+        <label><input type="radio" name="fType" value="buy" checked> شراء 📈</label>
+        <label><input type="radio" name="fType" value="sell"> بيع 📉</label>
+      </div>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">المبلغ ($)</label>
+      <input type="number" class="form-ctl" id="fAmt" placeholder="مثال: 10">
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl">ماذا تعلمت؟</label>
+      <textarea class="form-ctl" id="fLesson" rows="2" placeholder="صبرت على الصفقة..."></textarea>
+    </div>
+    <div class="trade-btns">
+      <button class="btn-win" onclick="submitTrade('win')">✓ ربح</button>
+      <button class="btn-loss" onclick="submitTrade('loss')">✗ خسارة</button>
+    </div>
+  </div>
+</div>
 
-        let trades = JSON.parse(localStorage.getItem('trades') || '[]');
-        let selectedDay = null;
+<!-- Ticker -->
+<div class="ticker">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
 
-        const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-        const daysOfWeek = ['أحد','إثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+<script>
+const months=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+const dayNames=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+let trades=JSON.parse(localStorage.getItem('tj_trades')||'[]');
+let selDay=null;
+const now=new Date();
 
-        function generateCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
+function buildCal(){
+  document.getElementById('monthLabel').textContent=months[now.getMonth()]+' '+now.getFullYear();
+  const g=document.getElementById('calGrid');
+  g.innerHTML='';
+  dayNames.forEach(d=>{const h=document.createElement('div');h.className='cal-header';h.textContent=d;g.appendChild(h)});
+  const total=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const first=new Date(now.getFullYear(),now.getMonth(),1).getDay();
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-cell empty';g.appendChild(e)}
+  for(let d=1;d<=total;d++){
+    const c=document.createElement('div');
+    const t=trades.find(x=>x.day===d);
+    c.className='cal-cell'+(d===now.getDate()?' today':'')+(t?' '+(t.result==='win'?'win-cell':'loss-cell'):'');
+    c.onclick=()=>openModal(d);
+    const n=document.createElement('div');n.className='cal-num';n.textContent=d;c.appendChild(n);
+    if(t){
+      const lb=document.createElement('div');
+      lb.className='cal-label '+(t.result==='win'?'win-label':'loss-label');
+      lb.textContent=t.result==='win'?'ربح':'خسارة';
+      c.appendChild(lb);
+      const ar=document.createElement('div');
+      ar.className='cal-arrow';
+      ar.textContent=t.result==='win'?'↗':'↘';
+      ar.style.color=t.result==='win'?'var(--green)':'var(--red)';
+      c.appendChild(ar);
+    }
+    g.appendChild(c);
+  }
+}
 
-            const now = new Date();
-            document.getElementById('currentMonth').textContent = months[now.getMonth()] + ' ' + now.getFullYear();
+function openModal(d){
+  selDay=d;
+  document.getElementById('mdDay').textContent=d;
+  document.getElementById('fAmt').value='';
+  document.getElementById('fLesson').value='';
+  const ex=trades.find(t=>t.day===d);
+  if(ex){document.getElementById('fAmt').value=ex.amount;document.getElementById('fLesson').value=ex.lesson||''}
+  document.getElementById('modalOverlay').style.display='flex';
+}
+function closeModal(){document.getElementById('modalOverlay').style.display='none'}
 
-            daysOfWeek.forEach(day => {
-                let h = document.createElement('div');
-                h.className = 'day-header';
-                h.innerText = day;
-                grid.appendChild(h);
-            });
+function submitTrade(result){
+  const amt=parseFloat(document.getElementById('fAmt').value);
+  if(!amt){alert('أدخل المبلغ');return}
+  const idx=trades.findIndex(t=>t.day===selDay);
+  const entry={day:selDay,result,amount:amt,pair:document.getElementById('fPair').value,type:document.querySelector('input[name="fType"]:checked').value,lesson:document.getElementById('fLesson').value};
+  if(idx>=0)trades[idx]=entry;else trades.push(entry);
+  localStorage.setItem('tj_trades',JSON.stringify(trades));
+  closeModal();buildCal();updateStats();
+}
 
-            const month = now.getMonth();
-            const year = now.getFullYear();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            const firstDay = new Date(year, month, 1).getDay();
+function updateStats(){
+  const wins=trades.filter(t=>t.result==='win').length;
+  const total=trades.length;
+  const wr=total===0?0:Math.round(wins/total*100);
+  document.getElementById('totalTrades').textContent=total;
+  document.getElementById('winRate').textContent=wr+'%';
+  document.getElementById('circText').textContent=wr+'%';
+  const circ=document.getElementById('circFill');
+  const dash=138;
+  circ.style.strokeDashoffset=dash-(dash*wr/100);
+  circ.style.stroke=wr>=50?'var(--green)':'var(--red)';
+  document.getElementById('circText').style.color=wr>=50?'var(--green)':'var(--red)';
+  const net=trades.reduce((s,t)=>t.result==='win'?s+t.amount:s-t.amount,0);
+  const el=document.getElementById('netPnl');
+  el.textContent=(net>=0?'+':'-')+'$'+Math.abs(net).toFixed(2);
+  el.className='stat-value '+(net>=0?'green':'red');
+  const rec=trades.slice(-7);
+  document.getElementById('wkW').textContent=rec.filter(t=>t.result==='win').length;
+  document.getElementById('wkL').textContent=rec.filter(t=>t.result==='loss').length;
+}
 
-            for (let i = 0; i < firstDay; i++) {
-                let empty = document.createElement('div');
-                empty.className = 'day-cell empty-cell';
-                grid.appendChild(empty);
-            }
+function calcLot(){
+  const c=parseFloat(document.getElementById('cap').value);
+  const r=parseFloat(document.getElementById('rsk').value);
+  const s=parseFloat(document.getElementById('slp').value);
+  document.getElementById('lotRes').textContent='حجم اللوت: '+(c>0&&r>0&&s>0?((c*r/100)/(s*10)).toFixed(2):'0.00');
+}
 
-            for (let day = 1; day <= daysInMonth; day++) {
-                let cell = document.createElement('div');
-                cell.className = 'day-cell';
-                cell.onclick = () => openModal(day);
+function buildTicker(){
+  const pairs=[
+    {s:'XAU/USD',p:'3213.08/2025 0.0660',ch:'+0.087%'},
+    {s:'EUR/USD',p:'1.0823',ch:'+0.043%'},
+    {s:'GBP/USD',p:'1.2711',ch:'-0.021%'},
+    {s:'USD/JPY',p:'157.32',ch:'+0.112%'},
+    {s:'BTC/USD',p:'67,450',ch:'+1.23%'},
+    {s:'NAS100',p:'19,820',ch:'+0.54%'},
+    {s:'Priglmts',p:'3/3640',ch:'+0.075%'},
+    {s:'SLST',p:'$022',ch:'+$30.00'},
+    {s:'injc',p:'178.0',ch:'+0.0867%'},
+  ];
+  const t=document.getElementById('ticker');
+  const makeItems=()=>pairs.map(p=>`<span class="tick-item"><span class="tick-sym">${p.s}</span><span>${p.p}</span><span class="${p.ch.startsWith('-')?'tick-dn':'tick-up'}">${p.ch}</span></span>`).join('');
+  t.innerHTML=makeItems()+makeItems();
+}
 
-                let num = document.createElement('div');
-                num.className = 'day-num';
-                num.innerText = day;
-                cell.appendChild(num);
-
-                let trade = trades.find(t => t.day === day);
-                if (trade) {
-                    let ind = document.createElement('div');
-                    ind.className = 'trade-indicator ' + (trade.result === 'win' ? 'win-ind' : 'loss-ind');
-                    ind.innerText = trade.result === 'win' ? '✓ ربح' : '✗ خسارة';
-                    cell.appendChild(ind);
-                }
-
-                grid.appendChild(cell);
-            }
-        }
-
-        function openModal(day) {
-            selectedDay = day;
-            document.getElementById('modalDayNum').innerText = day;
-            document.getElementById('tradeModal').style.display = 'flex';
-            document.getElementById('tradeAmount').value = '';
-            document.getElementById('tradePerc').value = '';
-            document.getElementById('tradeLesson').value = '';
-            let existing = trades.find(t => t.day === day);
-            if (existing) {
-                document.getElementById('tradeAmount').value = existing.amount;
-                document.getElementById('tradeLesson').value = existing.lesson || '';
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('tradeModal').style.display = 'none';
-        }
-
-        function submitTrade(result) {
-            let amount = document.getElementById('tradeAmount').value;
-            if (!amount) { alert('يرجى إدخال المبلغ'); return; }
-
-            let idx = trades.findIndex(t => t.day === selectedDay);
-            let entry = {
-                day: selectedDay,
-                pair: document.getElementById('pair').value,
-                type: document.querySelector('input[name="type"]:checked').value,
-                result: result,
-                amount: parseFloat(amount),
-                percentage: parseFloat(document.getElementById('tradePerc').value) || 0,
-                lesson: document.getElementById('tradeLesson').value
-            };
-
-            if (idx >= 0) trades[idx] = entry;
-            else trades.push(entry);
-
-            localStorage.setItem('trades', JSON.stringify(trades));
-            closeModal();
-            generateCalendar();
-            updateStats();
-        }
-
-        function updateStats() {
-            let wins = trades.filter(t => t.result === 'win').length;
-            let losses = trades.filter(t => t.result === 'loss').length;
-            let total = trades.length;
-            let winPerc = total === 0 ? 50 : Math.round((wins / total) * 100);
-
-            document.getElementById('totalTrades').innerText = total;
-            document.getElementById('winRate').innerText = total === 0 ? '—' : winPerc + '%';
-            document.getElementById('winBar').style.width = winPerc + '%';
-            document.getElementById('lossBar').style.width = (100 - winPerc) + '%';
-
-            let netPnl = trades.reduce((sum, t) => t.result === 'win' ? sum + t.amount : sum - t.amount, 0);
-            let pnlEl = document.getElementById('netPnl');
-            pnlEl.innerText = (netPnl >= 0 ? '+$' : '-$') + Math.abs(netPnl).toFixed(2);
-            pnlEl.style.color = netPnl >= 0 ? 'var(--profit-green)' : 'var(--loss-red)';
-
-            let recent = trades.slice(-7);
-            document.getElementById('weekWins').innerText = recent.filter(t => t.result === 'win').length;
-            document.getElementById('weekLosses').innerText = recent.filter(t => t.result === 'loss').length;
-        }
-
-        document.querySelectorAll('.calc-input').forEach(input => {
-            input.addEventListener('input', calculateLot);
-        });
-
-        function calculateLot() {
-            let capital = parseFloat(document.getElementById('capital').value);
-            let risk = parseFloat(document.getElementById('riskPerc').value);
-            let sl = parseFloat(document.getElementById('slPips').value);
-            if (capital > 0 && risk > 0 && sl > 0) {
-                let lotSize = (capital * risk / 100) / (sl * 10);
-                document.getElementById('lotResult').innerText = 'حجم اللوت: ' + lotSize.toFixed(2);
-            } else {
-                document.getElementById('lotResult').innerText = 'حجم اللوت: 0.00';
-            }
-        }
-
-        generateCalendar();
-        updateStats();
-    </script>
+buildCal();updateStats();buildTicker();
+</script>
 </body>
 </html>
