@@ -714,22 +714,21 @@ async function buildTicker(){
     const [fxRes,btcRes,goldRes]=await Promise.all([
       fetch('https://open.er-api.com/v6/latest/USD'),
       fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true'),
-      fetch('https://api.metals.live/v1/spot/gold').catch(()=>null)
+      fetch('https://api.coinbase.com/v2/prices/XAU-USD/spot').catch(()=>null)
     ]);
     const fx=await fxRes.json();
     const btc=await btcRes.json();
     const r=fx.rates;
 
-    // Gold price from metals.live (free, no key)
+    // Gold price from Coinbase (free, no key, CORS-safe)
     let goldPrice=null;
     if(goldRes&&goldRes.ok){
       try{
         const gd=await goldRes.json();
-        goldPrice=Array.isArray(gd)?gd[0]?.gold:gd?.gold;
+        goldPrice=parseFloat(gd?.data?.amount);
       }catch(_){}
     }
-    // Fallback: try XAU from er-api if available
-    if(!goldPrice&&r.XAU&&isFinite(1/r.XAU)) goldPrice=parseFloat((1/r.XAU).toFixed(2));
+    if(!goldPrice||!isFinite(goldPrice)) goldPrice=null;
 
     const prev=JSON.parse(localStorage.getItem('tt_prices_prev')||'null');
     const pch=(sym,val)=>{
