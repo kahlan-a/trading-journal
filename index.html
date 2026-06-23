@@ -76,11 +76,10 @@ body::after{content:'';position:fixed;inset:0;
 .card-title{font-size:14px;font-weight:600;margin-bottom:12px;color:#e0eaf5;display:flex;align-items:center;gap:8px}
 
 /* Calendar nav */
-.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.cal-nav-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--text);padding:5px 14px;border-radius:7px;cursor:pointer;font-size:16px;transition:.2s}
-.cal-nav-btn:hover{border-color:var(--green);color:var(--green)}
-.cal-nav-btn:disabled{opacity:0.3;cursor:default}
-.cal-month-title{font-size:14px;font-weight:600;color:#e0eaf5}
+.cal-nav{display:flex;align-items:center;margin-bottom:12px;gap:10px}
+.month-select{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.35);color:var(--green);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2300e676' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 10px center;padding-left:28px;transition:.2s}
+.month-select:hover{background-color:rgba(0,230,118,0.14);border-color:rgba(0,230,118,0.6)}
+.month-select option{background:#0d1a28;color:#e0eaf5;font-size:13px}
 /* Calendar */
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .cal-hdr{text-align:center;font-size:10px;color:var(--muted);font-weight:600;padding:3px 0}
@@ -434,11 +433,9 @@ body::after{content:'';position:fixed;inset:0;
   <div class="main">
     <div>
       <div class="card">
-        <div class="card-title">📅 تقويم الصفقات</div>
-        <div class="cal-nav">
-          <button class="cal-nav-btn" id="btnPrev" onclick="changeMonth(-1)">&#8250;</button>
-          <span class="cal-month-title" id="monthLabel"></span>
-          <button class="cal-nav-btn" id="btnNext" onclick="changeMonth(1)">&#8249;</button>
+        <div class="card-title" style="justify-content:space-between">
+          <span>📅 تقويم الصفقات</span>
+          <select class="month-select" id="monthSelect" onchange="onMonthSelect(this.value)"></select>
         </div>
         <div class="cal-grid" id="calGrid"></div>
       </div>
@@ -606,22 +603,31 @@ function tradeKey(){return currentUser.username+'_'+viewYear+'_'+viewMonth}
 function getUserTrades(){const d=getData();return d.trades[tradeKey()]||[]}
 function saveUserTrades(t){const d=getData();d.trades[tradeKey()]=t;saveData(d)}
 
-function changeMonth(dir){
-  viewMonth+=dir;
-  if(viewMonth>11){viewMonth=0;viewYear++;}
-  if(viewMonth<0){viewMonth=11;viewYear--;}
-  if(viewYear<MIN_YEAR||(viewYear===MIN_YEAR&&viewMonth<MIN_MONTH)){viewYear=MIN_YEAR;viewMonth=MIN_MONTH;}
-  if(viewYear>MAX_YEAR||(viewYear===MAX_YEAR&&viewMonth>MAX_MONTH)){viewYear=MAX_YEAR;viewMonth=MAX_MONTH;}
+function buildMonthSelect(){
+  const sel=document.getElementById('monthSelect');
+  if(!sel)return;
+  sel.innerHTML='';
+  for(let y=MIN_YEAR;y<=MAX_YEAR;y++){
+    const mStart=y===MIN_YEAR?MIN_MONTH:0;
+    const mEnd=y===MAX_YEAR?MAX_MONTH:11;
+    for(let m=mStart;m<=mEnd;m++){
+      const opt=document.createElement('option');
+      opt.value=y+'_'+m;
+      opt.textContent=months[m]+' '+y;
+      if(y===viewYear&&m===viewMonth)opt.selected=true;
+      sel.appendChild(opt);
+    }
+  }
+}
+
+function onMonthSelect(val){
+  const[y,m]=val.split('_').map(Number);
+  viewYear=y;viewMonth=m;
   buildCal();updateStats();
 }
 
 function buildCal(){
-  document.getElementById('monthLabel').textContent=months[viewMonth]+' '+viewYear;
-  // تحديث حالة أزرار التنقل
-  const atMin=viewYear===MIN_YEAR&&viewMonth===MIN_MONTH;
-  const atMax=viewYear===MAX_YEAR&&viewMonth===MAX_MONTH;
-  document.getElementById('btnPrev').disabled=atMin;
-  document.getElementById('btnNext').disabled=atMax;
+  buildMonthSelect();
   const g=document.getElementById('calGrid');g.innerHTML='';
   dayNames.forEach(d=>{const h=document.createElement('div');h.className='cal-hdr';h.textContent=d;g.appendChild(h)});
   const total=new Date(viewYear,viewMonth+1,0).getDate();
