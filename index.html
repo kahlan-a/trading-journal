@@ -126,6 +126,7 @@ body::after{content:'';position:fixed;inset:0;
 .u-name{font-size:13px;font-weight:600;color:#fff}
 .u-role{font-size:10px;color:var(--muted)}
 .btn-del{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px}
+.btn-edit{background:rgba(0,188,212,0.1);border:1px solid rgba(0,188,212,0.35);color:#00bcd4;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-left:4px}
 .btn-approve{background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.4);color:var(--green);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-left:4px}
 .btn-reject{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px}
 .pending-section{background:rgba(255,193,7,0.05);border:1px solid rgba(255,193,7,0.2);border-radius:8px;padding:8px 10px;margin-bottom:10px}
@@ -522,6 +523,20 @@ body::after{content:'';position:fixed;inset:0;
   </div>
 </div>
 
+<!-- Edit User Modal -->
+<div class="add-user-modal" id="editUserModal">
+  <div class="add-user-box">
+    <button class="close-btn" onclick="closeEditUser()">×</button>
+    <div class="modal-title">✏️ تعديل بيانات المستخدم</div>
+    <div class="err-msg" id="editUserErr"></div>
+    <input type="hidden" id="editOldUser">
+    <div class="form-grp"><label class="form-lbl">اسم المستخدم الجديد</label><input class="form-ctl" id="editNewUser" placeholder="اتركه فارغاً للإبقاء على القديم" autocomplete="off"></div>
+    <div class="form-grp"><label class="form-lbl">كلمة المرور الجديدة</label><input class="form-ctl" id="editNewPass" type="password" placeholder="اتركها فارغة للإبقاء على القديمة"></div>
+    <div class="form-grp"><label class="form-lbl">الدور</label><select class="form-ctl" id="editRole"><option value="user">مستخدم عادي</option><option value="owner">مالك</option></select></div>
+    <button class="btn-primary" onclick="saveEditUser()">💾 حفظ التعديلات</button>
+  </div>
+</div>
+
 <div class="ticker"><div class="ticker-inner" id="ticker"></div></div>
 
 <script>
@@ -684,6 +699,51 @@ function addUser(){
   closeAddUser();document.getElementById('nuUser').value='';document.getElementById('nuPass').value='';
   renderUsersList();alert(`✅ تم إضافة "${u}"`);
 }
+function openEditUser(un){
+  const d=getData();
+  const u=d.users.find(x=>x.username===un);
+  if(!u)return;
+  document.getElementById('editOldUser').value=un;
+  document.getElementById('editNewUser').value=un;
+  document.getElementById('editNewPass').value='';
+  document.getElementById('editRole').value=u.role||'user';
+  document.getElementById('editUserErr').style.display='none';
+  document.getElementById('editUserModal').style.display='flex';
+}
+function closeEditUser(){document.getElementById('editUserModal').style.display='none'}
+
+function saveEditUser(){
+  const oldUN=document.getElementById('editOldUser').value;
+  const newUN=document.getElementById('editNewUser').value.trim();
+  const newPass=document.getElementById('editNewPass').value;
+  const newRole=document.getElementById('editRole').value;
+  const err=document.getElementById('editUserErr');
+  err.style.display='none';
+  if(!newUN){err.textContent='اسم المستخدم لا يمكن أن يكون فارغاً';err.style.display='block';return}
+  const d=getData();
+  if(newUN!==oldUN&&d.users.find(x=>x.username===newUN)){err.textContent='اسم المستخدم موجود بالفعل';err.style.display='block';return}
+  const u=d.users.find(x=>x.username===oldUN);
+  if(!u)return;
+  // نقل بيانات الصفقات إذا تغيّر الاسم
+  if(newUN!==oldUN){
+    // نقل كل مفاتيح الصفقات
+    Object.keys(d.trades).forEach(k=>{
+      if(k.startsWith(oldUN+'_')){
+        const newKey=newUN+k.slice(oldUN.length);
+        d.trades[newKey]=d.trades[k];
+        delete d.trades[k];
+      }
+    });
+    u.username=newUN;
+  }
+  if(newPass) u.password=simpleHash(newPass);
+  u.role=newRole;
+  saveData(d);
+  closeEditUser();
+  renderUsersList();
+  alert(`✅ تم تعديل بيانات "${newUN}"`);
+}
+
 function deleteUser(un){
   if(!confirm(`حذف "${un}"؟`))return;
   const d=getData();d.users=d.users.filter(u=>u.username!==un);delete d.trades[un];saveData(d);renderUsersList();
@@ -721,7 +781,7 @@ function renderUsersList(){
         <div><div class="u-name">${u.username} ${online?'<span class="active-dot"></span>':''}</div>
         <div class="u-role">${u.role==='owner'?'👑 مالك':'👤 مستخدم'} ${online?'<span style="color:var(--green)">● متصل</span>':'<span style="color:var(--muted)">○ غير متصل</span>'}</div></div>
       </div>
-      <button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button>
+      <div style="display:flex;gap:4px"><button class="btn-edit" onclick="openEditUser('${u.username}')">✏️ تعديل</button><button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button></div>
     </div>`;
   }).join('');
   updateActiveCount();
