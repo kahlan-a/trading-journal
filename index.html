@@ -689,11 +689,75 @@ function calcLot(){
   document.getElementById('lotRes').textContent='حجم اللوت: '+(c>0&&r>0&&s>0?((c*r/100)/(s*10)).toFixed(2):'0.00');
 }
 
-function buildTicker(){
-  const pairs=[{s:'XAU/USD',p:'3213.08',ch:'+0.087%'},{s:'EUR/USD',p:'1.0823',ch:'+0.043%'},{s:'GBP/USD',p:'1.2711',ch:'-0.021%'},{s:'USD/JPY',p:'157.32',ch:'+0.112%'},{s:'BTC/USD',p:'67,450',ch:'+1.23%'},{s:'NAS100',p:'19,820',ch:'+0.54%'},{s:'OIL/USD',p:'82.40',ch:'-0.31%'},{s:'SPX500',p:'5,248',ch:'+0.18%'}];
+function renderTicker(pairs){
   const t=document.getElementById('ticker');
-  const mk=()=>pairs.map(p=>`<span class="tick-item"><span class="tick-sym">${p.s}</span><span>${p.p}</span><span class="${p.ch.startsWith('-')?'tick-dn':'tick-up'}">${p.ch}</span></span>`).join('');
+  const mk=()=>pairs.map(p=>`<span class="tick-item"><span class="tick-sym">${p.s}</span><span>${p.p}</span>${p.ch?`<span class="${p.up?'tick-up':'tick-dn'}">${p.up?'+':''}${p.ch}%</span>`:''}</span>`).join('');
   t.innerHTML=mk()+mk();
+}
+
+async function buildTicker(){
+  const t=document.getElementById('ticker');
+  t.innerHTML='<span class="tick-item" style="color:var(--muted)">⟳ جاري تحميل الأسعار الحية...</span>';
+
+  // استخدام الكاش (تحديث كل ساعة)
+  const cache=JSON.parse(localStorage.getItem('tt_prices')||'null');
+  if(cache&&(Date.now()-cache.ts)<3600000){renderTicker(cache.pairs);return}
+
+  try{
+    const [fxRes,btcRes]=await Promise.all([
+      fetch('https://open.er-api.com/v6/latest/USD'),
+      fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true')
+    ]);
+    const fx=await fxRes.json();
+    const btc=await btcRes.json();
+    const r=fx.rates;
+    const prev=JSON.parse(localStorage.getItem('tt_prices_prev')||'null');
+    const pch=(sym,val)=>{
+      if(!prev)return null;
+      const old=prev.raw[sym];
+      if(!old)return null;
+      return ((val-old)/old*100).toFixed(3);
+    };
+    const raw={
+      'XAU/USD':parseFloat((1/r.XAU).toFixed(2)),
+      'EUR/USD':parseFloat((1/r.EUR).toFixed(4)),
+      'GBP/USD':parseFloat((1/r.GBP).toFixed(4)),
+      'USD/JPY':parseFloat(r.JPY.toFixed(2)),
+      'AUD/USD':parseFloat((1/r.AUD).toFixed(4)),
+      'USD/CHF':parseFloat(r.CHF.toFixed(4)),
+      'USD/CAD':parseFloat(r.CAD.toFixed(4)),
+      'NZD/USD':parseFloat((1/r.NZD).toFixed(4)),
+    };
+    const btcChange=btc.bitcoin.usd_24h_change;
+    const pairs=[
+      {s:'XAU/USD',p:raw['XAU/USD'].toLocaleString('en-US',{minimumFractionDigits:2}),ch:pch('XAU/USD',raw['XAU/USD']),up:pch('XAU/USD',raw['XAU/USD'])>0},
+      {s:'EUR/USD',p:raw['EUR/USD'],ch:pch('EUR/USD',raw['EUR/USD']),up:pch('EUR/USD',raw['EUR/USD'])>0},
+      {s:'GBP/USD',p:raw['GBP/USD'],ch:pch('GBP/USD',raw['GBP/USD']),up:pch('GBP/USD',raw['GBP/USD'])>0},
+      {s:'USD/JPY',p:raw['USD/JPY'],ch:pch('USD/JPY',raw['USD/JPY']),up:pch('USD/JPY',raw['USD/JPY'])>0},
+      {s:'BTC/USD',p:btc.bitcoin.usd.toLocaleString('en-US'),ch:btcChange?Math.abs(btcChange).toFixed(2):null,up:btcChange>0},
+      {s:'AUD/USD',p:raw['AUD/USD'],ch:pch('AUD/USD',raw['AUD/USD']),up:pch('AUD/USD',raw['AUD/USD'])>0},
+      {s:'USD/CHF',p:raw['USD/CHF'],ch:pch('USD/CHF',raw['USD/CHF']),up:pch('USD/CHF',raw['USD/CHF'])>0},
+      {s:'USD/CAD',p:raw['USD/CAD'],ch:pch('USD/CAD',raw['USD/CAD']),up:pch('USD/CAD',raw['USD/CAD'])>0},
+      {s:'NZD/USD',p:raw['NZD/USD'],ch:pch('NZD/USD',raw['NZD/USD']),up:pch('NZD/USD',raw['NZD/USD'])>0},
+    ];
+    // حفظ الكاش
+    if(cache)localStorage.setItem('tt_prices_prev',JSON.stringify({raw:JSON.parse(localStorage.getItem('tt_prices')).raw,ts:cache.ts}));
+    localStorage.setItem('tt_prices',JSON.stringify({ts:Date.now(),pairs,raw}));
+    renderTicker(pairs);
+    // تحديث كل ساعة
+    setTimeout(()=>{localStorage.removeItem('tt_prices');buildTicker()},3600000);
+  }catch(e){
+    // fallback static
+    renderTicker([
+      {s:'XAU/USD',p:'3,213.08',ch:'0.087',up:true},
+      {s:'EUR/USD',p:'1.0823',ch:'0.043',up:true},
+      {s:'GBP/USD',p:'1.2711',ch:'0.021',up:false},
+      {s:'USD/JPY',p:'157.32',ch:'0.112',up:true},
+      {s:'BTC/USD',p:'67,450',ch:'1.23',up:true},
+      {s:'AUD/USD',p:'0.6521',ch:'0.015',up:false},
+      {s:'USD/CHF',p:'0.8980',ch:'0.008',up:true},
+    ]);
+  }
 }
 
 init();
