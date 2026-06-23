@@ -126,6 +126,17 @@ body::after{content:'';position:fixed;inset:0;
 .u-name{font-size:13px;font-weight:600;color:#fff}
 .u-role{font-size:10px;color:var(--muted)}
 .btn-del{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px}
+.btn-approve{background:rgba(0,230,118,0.12);border:1px solid rgba(0,230,118,0.4);color:var(--green);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;margin-left:4px}
+.btn-reject{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px}
+.pending-section{background:rgba(255,193,7,0.05);border:1px solid rgba(255,193,7,0.2);border-radius:8px;padding:8px 10px;margin-bottom:10px}
+.pending-title{font-size:11px;color:var(--gold);font-weight:600;margin-bottom:6px}
+.pending-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.pending-item:last-child{border-bottom:none}
+.active-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);margin-left:4px;animation:pulse 2s infinite}
+.auth-link{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
+.auth-link span{color:var(--green);cursor:pointer;text-decoration:underline}
+.pending-badge-auth{background:rgba(255,193,7,0.12);border:1px solid rgba(255,193,7,0.3);color:var(--gold);padding:10px 14px;border-radius:8px;font-size:12px;text-align:center;margin-bottom:14px}
+.notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 1.5s infinite}
 
 /* Modals */
 .modal-overlay,.add-user-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:150;justify-content:center;align-items:center}
@@ -415,6 +426,17 @@ body::after{content:'';position:fixed;inset:0;
       <div class="field"><label>اسم المستخدم</label><input id="loginUser" placeholder="اسم المستخدم" autocomplete="off"></div>
       <div class="field"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="كلمة المرور"></div>
       <button class="btn-primary" onclick="doLogin()">تسجيل الدخول</button>
+      <div class="auth-link">ليس لديك حساب؟ <span onclick="showRequestPanel()">اطلب حساباً</span></div>
+    </div>
+
+    <div id="requestPanel" style="display:none">
+      <div class="pending-badge-auth">📋 طلب حساب جديد — يحتاج موافقة المالك</div>
+      <div class="err-msg" id="reqErr"></div>
+      <div class="err-msg" id="reqOk" style="background:rgba(0,230,118,0.1);border-color:rgba(0,230,118,0.3);color:var(--green);display:none"></div>
+      <div class="field"><label>اسم المستخدم</label><input id="reqUser" placeholder="اختر اسم مستخدم" autocomplete="off"></div>
+      <div class="field"><label>كلمة المرور</label><input id="reqPass" type="password" placeholder="كلمة المرور"></div>
+      <button class="btn-primary" onclick="sendAccountRequest()">إرسال الطلب ←</button>
+      <div class="auth-link">لديك حساب؟ <span onclick="showLoginPanel()">تسجيل الدخول</span></div>
     </div>
   </div>
 </div>
@@ -448,7 +470,11 @@ body::after{content:'';position:fixed;inset:0;
         <div class="stat-card"><div><div class="stat-label">Net Profit and Loss:</div><div class="stat-value green" id="netPnl">$0.00</div></div></div>
       </div>
       <div class="card users-panel" id="usersPanel">
-        <div class="card-title">👥 المستخدمون</div>
+        <div class="card-title" style="justify-content:space-between;align-items:center">
+          <span>👥 المستخدمون</span>
+          <span id="activeCount" style="font-size:12px;font-weight:500;color:var(--green)"><span class="active-dot"></span><span id="activeNum">0</span> متصل</span>
+        </div>
+        <div id="pendingList"></div>
         <div id="usersList"></div>
       </div>
     </div>
@@ -535,13 +561,41 @@ function createOwner(){
   if(p!==p2){err.textContent='كلمتا المرور غير متطابقتين';err.style.display='block';return}
   if(p.length<4){err.textContent='كلمة المرور 4 أحرف على الأقل';err.style.display='block';return}
   const d=getData();
-  d.users.push({username:u,password:simpleHash(p),role:'owner'});
+  d.users.push({username:u,password:simpleHash(p),role:'owner',status:'approved'});
   d.trades[u]=[];
   saveData(d);
   alert('✅ تم إنشاء حساب المالك!');
   document.getElementById('setupPanel').style.display='none';
   document.getElementById('loginPanel').style.display='block';
   document.getElementById('loginUser').value=u;
+}
+
+function showRequestPanel(){
+  document.getElementById('loginPanel').style.display='none';
+  document.getElementById('requestPanel').style.display='block';
+  document.getElementById('reqErr').style.display='none';
+  document.getElementById('reqOk').style.display='none';
+}
+function showLoginPanel(){
+  document.getElementById('requestPanel').style.display='none';
+  document.getElementById('loginPanel').style.display='block';
+  document.getElementById('loginErr').style.display='none';
+}
+
+function sendAccountRequest(){
+  const u=document.getElementById('reqUser').value.trim();
+  const p=document.getElementById('reqPass').value;
+  const err=document.getElementById('reqErr');
+  const ok=document.getElementById('reqOk');
+  err.style.display='none';ok.style.display='none';
+  if(!u||!p){err.textContent='يرجى تعبئة جميع الحقول';err.style.display='block';return}
+  if(p.length<4){err.textContent='كلمة المرور 4 أحرف على الأقل';err.style.display='block';return}
+  const d=getData();
+  if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم موجود';err.style.display='block';return}
+  d.users.push({username:u,password:simpleHash(p),role:'user',status:'pending'});
+  saveData(d);
+  document.getElementById('reqUser').value='';document.getElementById('reqPass').value='';
+  ok.textContent='✅ تم إرسال طلبك — انتظر موافقة المالك';ok.style.display='block';
 }
 
 function doLogin(){
@@ -553,6 +607,8 @@ function doLogin(){
   const d=getData();
   const user=d.users.find(x=>x.username===u&&x.password===simpleHash(p));
   if(!user){err.textContent='اسم المستخدم أو كلمة المرور غير صحيحة';err.style.display='block';return}
+  if(user.status==='pending'){err.textContent='⏳ طلبك قيد الانتظار — لم يوافق المالك بعد';err.style.display='block';return}
+  if(user.status==='rejected'){err.textContent='❌ تم رفض طلبك من قِبل المالك';err.style.display='block';return}
   saveSession(user);enterApp(user);
 }
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
@@ -566,11 +622,52 @@ function enterApp(user){
   document.getElementById('avLetter').textContent=user.username.charAt(0).toUpperCase();
   document.getElementById('badgeName').textContent=user.username;
   badge.querySelector('span').textContent=user.role==='owner'?'👑':'👤';
-  if(user.role==='owner'){document.getElementById('btnAddUser').style.display='block';document.getElementById('usersPanel').style.display='block';renderUsersList()}
+  if(user.role==='owner'){
+    document.getElementById('btnAddUser').style.display='block';
+    document.getElementById('usersPanel').style.display='block';
+    renderUsersList();
+    setInterval(()=>{renderUsersList();updateActiveCount();},15000);
+  }
+  startHeartbeat();
   buildCal();updateStats();
 }
 
-function logout(){clearSession();location.reload()}
+function logout(){
+  if(currentUser)localStorage.removeItem('tt_hb_'+currentUser.username);
+  clearSession();location.reload();
+}
+
+function startHeartbeat(){
+  const key='tt_hb_'+currentUser.username;
+  const beat=()=>localStorage.setItem(key,Date.now());
+  beat();
+  setInterval(beat,30000);
+}
+
+function updateActiveCount(){
+  const d=getData();
+  const now=Date.now();
+  const count=d.users.filter(u=>{
+    const hb=parseInt(localStorage.getItem('tt_hb_'+u.username)||0);
+    return (now-hb)<120000; // متصل إذا heartbeat خلال آخر 2 دقيقة
+  }).length;
+  const el=document.getElementById('activeNum');
+  if(el)el.textContent=count;
+}
+
+function approveUser(un){
+  const d=getData();
+  const u=d.users.find(x=>x.username===un);
+  if(u){u.status='approved';if(!d.trades[un])d.trades[un]=[];}
+  saveData(d);renderUsersList();
+}
+
+function rejectUser(un){
+  if(!confirm(`رفض طلب "${un}"؟`))return;
+  const d=getData();
+  d.users=d.users.filter(x=>x.username!==un);
+  saveData(d);renderUsersList();
+}
 
 function openAddUser(){document.getElementById('addUserModal').style.display='flex'}
 function closeAddUser(){document.getElementById('addUserModal').style.display='none'}
@@ -583,7 +680,7 @@ function addUser(){
   if(!u||!p){err.textContent='يرجى تعبئة جميع الحقول';err.style.display='block';return}
   const d=getData();
   if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم موجود';err.style.display='block';return}
-  d.users.push({username:u,password:simpleHash(p),role:r});d.trades[u]=[];saveData(d);
+  d.users.push({username:u,password:simpleHash(p),role:r,status:'approved'});d.trades[u]=[];saveData(d);
   closeAddUser();document.getElementById('nuUser').value='';document.getElementById('nuPass').value='';
   renderUsersList();alert(`✅ تم إضافة "${u}"`);
 }
@@ -593,10 +690,41 @@ function deleteUser(un){
 }
 function renderUsersList(){
   const d=getData();
+  const now=Date.now();
+  const isOnline=un=>(now-parseInt(localStorage.getItem('tt_hb_'+un)||0))<120000;
+
+  // Pending requests
+  const pending=d.users.filter(u=>u.status==='pending');
+  const pendingEl=document.getElementById('pendingList');
+  if(pending.length){
+    pendingEl.innerHTML=`<div class="pending-section">
+      <div class="pending-title"><span class="notif-dot"></span>طلبات تنتظر الموافقة (${pending.length})</div>
+      ${pending.map(u=>`<div class="pending-item">
+        <div class="u-row"><div class="u-av" style="background:linear-gradient(135deg,#ffc107,#ff9800)">${u.username.charAt(0).toUpperCase()}</div>
+        <div><div class="u-name">${u.username}</div><div class="u-role">⏳ معلّق</div></div></div>
+        <div><button class="btn-approve" onclick="approveUser('${u.username}')">✓ قبول</button><button class="btn-reject" onclick="rejectUser('${u.username}')">✕ رفض</button></div>
+      </div>`).join('')}
+    </div>`;
+  } else {
+    pendingEl.innerHTML='';
+  }
+
+  // Approved users
+  const others=d.users.filter(u=>u.username!==currentUser.username&&u.status!=='pending');
   const list=document.getElementById('usersList');
-  const others=d.users.filter(u=>u.username!==currentUser.username);
-  if(!others.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">لا يوجد مستخدمون</div>';return}
-  list.innerHTML=others.map(u=>`<div class="user-item"><div class="u-row"><div class="u-av">${u.username.charAt(0).toUpperCase()}</div><div><div class="u-name">${u.username}</div><div class="u-role">${u.role==='owner'?'👑 مالك':'👤 مستخدم'}</div></div></div><button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button></div>`).join('');
+  if(!others.length){list.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:8px">لا يوجد مستخدمون</div>';updateActiveCount();return}
+  list.innerHTML=others.map(u=>{
+    const online=isOnline(u.username);
+    return `<div class="user-item">
+      <div class="u-row">
+        <div class="u-av">${u.username.charAt(0).toUpperCase()}</div>
+        <div><div class="u-name">${u.username} ${online?'<span class="active-dot"></span>':''}</div>
+        <div class="u-role">${u.role==='owner'?'👑 مالك':'👤 مستخدم'} ${online?'<span style="color:var(--green)">● متصل</span>':'<span style="color:var(--muted)">○ غير متصل</span>'}</div></div>
+      </div>
+      <button class="btn-del" onclick="deleteUser('${u.username}')">حذف</button>
+    </div>`;
+  }).join('');
+  updateActiveCount();
 }
 
 function tradeKey(){return currentUser.username+'_'+viewYear+'_'+viewMonth}
