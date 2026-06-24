@@ -39,13 +39,25 @@ body::after{content:'';position:fixed;inset:0;
 .arr-fly.dn{animation:sinkDown 2s ease-out infinite}
 
 /* ===== AUTH ===== */
-.auth-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(6,9,13,0.95)}
-.auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:36px;width:90%;max-width:420px}
-.auth-logo{text-align:center;margin-bottom:24px}
-.auth-logo .li{width:54px;height:54px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 24px rgba(0,230,118,0.5);margin-bottom:12px}
+.auth-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(6,9,13,0.97)}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 36px;width:90%;max-width:420px}
+.auth-logo{text-align:center;margin-bottom:20px}
+.auth-logo .li{width:54px;height:54px;background:linear-gradient(135deg,#00e676,#00bcd4);border-radius:14px;display:inline-flex;align-items:center;justify-content:center;font-size:26px;box-shadow:0 0 24px rgba(0,230,118,0.5);margin-bottom:10px}
 .auth-logo h2{font-size:22px;font-weight:700;color:#fff}.auth-logo h2 span{color:var(--green)}
-.auth-logo p{font-size:13px;color:var(--muted);margin-top:4px}
+.auth-logo p{font-size:13px;color:var(--muted);margin-top:3px}
 .setup-badge{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);color:var(--gold);padding:8px 14px;border-radius:8px;font-size:12px;text-align:center;margin-bottom:18px}
+/* Auth Tabs */
+.auth-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:22px;gap:2px}
+.auth-tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:.2s;border:none;background:transparent}
+.auth-tab.active{background:linear-gradient(135deg,#00c853,#00e676);color:#000}
+/* Pending waiting screen */
+.wait-screen{text-align:center;padding:10px 0}
+.wait-icon{font-size:48px;margin-bottom:14px;animation:pulse 2s infinite}
+.wait-title{font-size:17px;font-weight:700;color:#fff;margin-bottom:8px}
+.wait-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:18px}
+.wait-user{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.25);border-radius:8px;padding:10px;font-size:13px;color:var(--green);margin-bottom:16px}
+.btn-secondary{width:100%;padding:11px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer;transition:.2s}
+.btn-secondary:hover{border-color:var(--green);color:var(--green)}
 .field{margin-bottom:14px}
 .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
 .field input,.field select{width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;color:#fff;font-size:14px;transition:.2s}
@@ -53,6 +65,9 @@ body::after{content:'';position:fixed;inset:0;
 .field input::placeholder{color:var(--muted)}
 .btn-primary{width:100%;padding:13px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;transition:.2s}
 .btn-primary:hover{opacity:.9}
+/* Owner notification badge */
+.owner-notif{position:fixed;top:70px;right:20px;z-index:100;background:var(--card);border:1px solid rgba(255,193,7,0.5);border-radius:12px;padding:12px 16px;font-size:13px;display:none;box-shadow:0 4px 20px rgba(255,193,7,0.2);animation:slideIn .3s ease}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
 .err-msg{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.3);color:var(--red);padding:9px 12px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none}
 #authScreen{display:flex}
 #appScreen{display:none;flex-direction:column;flex:1}
@@ -423,23 +438,46 @@ body::after{content:'';position:fixed;inset:0;
       <button class="btn-primary" onclick="createOwner()">إنشاء حساب المالك 👑</button>
     </div>
     <div id="loginPanel" style="display:none">
-      <div class="err-msg" id="loginErr"></div>
-      <div class="field"><label>اسم المستخدم</label><input id="loginUser" placeholder="اسم المستخدم" autocomplete="off"></div>
-      <div class="field"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="كلمة المرور"></div>
-      <button class="btn-primary" onclick="doLogin()">تسجيل الدخول</button>
-      <div class="auth-link">ليس لديك حساب؟ <span onclick="showRequestPanel()">اطلب حساباً</span></div>
-    </div>
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">تسجيل الدخول</button>
+        <button class="auth-tab" id="tabReg" onclick="switchTab('reg')">إنشاء حساب</button>
+      </div>
 
-    <div id="requestPanel" style="display:none">
-      <div class="pending-badge-auth">📋 طلب حساب جديد — يحتاج موافقة المالك</div>
-      <div class="err-msg" id="reqErr"></div>
-      <div class="err-msg" id="reqOk" style="background:rgba(0,230,118,0.1);border-color:rgba(0,230,118,0.3);color:var(--green);display:none"></div>
-      <div class="field"><label>اسم المستخدم</label><input id="reqUser" placeholder="اختر اسم مستخدم" autocomplete="off"></div>
-      <div class="field"><label>كلمة المرور</label><input id="reqPass" type="password" placeholder="كلمة المرور"></div>
-      <button class="btn-primary" onclick="sendAccountRequest()">إرسال الطلب ←</button>
-      <div class="auth-link">لديك حساب؟ <span onclick="showLoginPanel()">تسجيل الدخول</span></div>
+      <!-- Login form -->
+      <div id="loginForm">
+        <div class="err-msg" id="loginErr"></div>
+        <div class="field"><label>اسم المستخدم</label><input id="loginUser" placeholder="اسم المستخدم" autocomplete="off"></div>
+        <div class="field"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="كلمة المرور"></div>
+        <button class="btn-primary" onclick="doLogin()">دخول →</button>
+      </div>
+
+      <!-- Register form -->
+      <div id="regForm" style="display:none">
+        <div class="err-msg" id="reqErr"></div>
+        <div class="field"><label>اسم المستخدم</label><input id="reqUser" placeholder="اختر اسم مستخدم" autocomplete="off"></div>
+        <div class="field"><label>كلمة المرور</label><input id="reqPass" type="password" placeholder="كلمة المرور (4 أحرف على الأقل)"></div>
+        <button class="btn-primary" onclick="sendAccountRequest()">إرسال طلب الحساب ←</button>
+      </div>
+
+      <!-- Waiting for approval screen -->
+      <div id="waitScreen" style="display:none">
+        <div class="wait-screen">
+          <div class="wait-icon">⏳</div>
+          <div class="wait-title">تم إرسال طلبك!</div>
+          <div class="wait-user" id="waitUserName"></div>
+          <div class="wait-sub">طلبك وصل للمالك — بمجرد موافقته يمكنك تسجيل الدخول</div>
+          <button class="btn-secondary" onclick="switchTab('login')">← الرجوع لتسجيل الدخول</button>
+        </div>
+      </div>
     </div>
   </div>
+</div>
+
+<!-- Owner notification -->
+<div class="owner-notif" id="ownerNotif">
+  <span class="notif-dot"></span> <span id="ownerNotifTxt"></span>
+  <span onclick="document.getElementById('ownerNotif').style.display='none'" style="margin-right:10px;cursor:pointer;color:var(--muted)">×</span>
 </div>
 
 <!-- ===== APP SCREEN ===== -->
@@ -585,32 +623,40 @@ function createOwner(){
   document.getElementById('loginUser').value=u;
 }
 
-function showRequestPanel(){
-  document.getElementById('loginPanel').style.display='none';
-  document.getElementById('requestPanel').style.display='block';
-  document.getElementById('reqErr').style.display='none';
-  document.getElementById('reqOk').style.display='none';
-}
-function showLoginPanel(){
-  document.getElementById('requestPanel').style.display='none';
-  document.getElementById('loginPanel').style.display='block';
+function switchTab(tab){
+  const isLogin=tab==='login';
+  document.getElementById('tabLogin').className='auth-tab'+(isLogin?' active':'');
+  document.getElementById('tabReg').className='auth-tab'+(!isLogin?' active':'');
+  document.getElementById('tabLogin').style.display='';
+  document.getElementById('tabReg').style.display='';
+  document.getElementById('loginForm').style.display=isLogin?'block':'none';
+  document.getElementById('regForm').style.display=(!isLogin)?'block':'none';
+  document.getElementById('waitScreen').style.display='none';
   document.getElementById('loginErr').style.display='none';
+  document.getElementById('reqErr').style.display='none';
 }
+function showRequestPanel(){switchTab('reg')}
+function showLoginPanel(){switchTab('login')}
 
 function sendAccountRequest(){
   const u=document.getElementById('reqUser').value.trim();
   const p=document.getElementById('reqPass').value;
   const err=document.getElementById('reqErr');
-  const ok=document.getElementById('reqOk');
-  err.style.display='none';ok.style.display='none';
+  err.style.display='none';
   if(!u||!p){err.textContent='يرجى تعبئة جميع الحقول';err.style.display='block';return}
   if(p.length<4){err.textContent='كلمة المرور 4 أحرف على الأقل';err.style.display='block';return}
   const d=getData();
-  if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم موجود';err.style.display='block';return}
+  if(d.users.find(x=>x.username===u)){err.textContent='اسم المستخدم مستخدم بالفعل';err.style.display='block';return}
   d.users.push({username:u,password:simpleHash(p),role:'user',status:'pending'});
   saveData(d);
-  document.getElementById('reqUser').value='';document.getElementById('reqPass').value='';
-  ok.textContent='✅ تم إرسال طلبك — انتظر موافقة المالك';ok.style.display='block';
+  document.getElementById('reqUser').value='';
+  document.getElementById('reqPass').value='';
+  // Show waiting screen
+  document.getElementById('regForm').style.display='none';
+  document.getElementById('tabLogin').style.display='none';
+  document.getElementById('tabReg').style.display='none';
+  document.getElementById('waitUserName').textContent='👤 '+u;
+  document.getElementById('waitScreen').style.display='block';
 }
 
 function doLogin(){
@@ -641,7 +687,8 @@ function enterApp(user){
     document.getElementById('btnAddUser').style.display='block';
     document.getElementById('usersPanel').style.display='block';
     renderUsersList();
-    setInterval(()=>{renderUsersList();updateActiveCount();},15000);
+    showOwnerNotif();
+    setInterval(()=>{renderUsersList();updateActiveCount();showOwnerNotif();},15000);
   }
   startHeartbeat();
   buildCal();updateStats();
@@ -668,6 +715,24 @@ function updateActiveCount(){
   }).length;
   const el=document.getElementById('activeNum');
   if(el)el.textContent=count;
+}
+
+function showOwnerNotif(){
+  const d=getData();
+  const pending=d.users.filter(u=>u.status==='pending');
+  const notif=document.getElementById('ownerNotif');
+  if(!notif)return;
+  if(pending.length>0){
+    document.getElementById('ownerNotifTxt').textContent=
+      pending.length===1
+        ? `طلب حساب جديد من "${pending[0].username}" — انتظر موافقتك`
+        : `${pending.length} طلبات حساب جديدة تنتظر موافقتك`;
+    notif.style.display='flex';
+    notif.style.alignItems='center';
+    notif.style.gap='6px';
+  } else {
+    notif.style.display='none';
+  }
 }
 
 function approveUser(un){
