@@ -146,9 +146,34 @@ body::after{content:'';position:fixed;inset:0;
 .calc-inp:focus{outline:none;border-color:var(--green)}
 .calc-inp::placeholder{color:var(--muted)}
 .calc-res{background:rgba(0,230,118,0.08);border:1px solid rgba(0,230,118,0.35);color:var(--green);padding:11px;text-align:center;border-radius:7px;font-size:15px;font-weight:700;margin-top:3px;box-shadow:0 0 12px rgba(0,230,118,0.1)}
-.week-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-.week-row:last-child{border-bottom:none}
-.week-val{font-size:17px;font-weight:700}
+/* Week Summary Card */
+.wk-card{padding:14px!important;background:#040d14!important}
+.wk-body{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0}
+.wk-side{display:flex;flex-direction:column;align-items:center;gap:8px;flex:1}
+.wk-panel{width:54px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px 6px;min-height:110px;position:relative}
+.wk-panel.gp{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.4);box-shadow:0 0 18px rgba(0,230,118,0.2),inset 0 0 14px rgba(0,230,118,0.08)}
+.wk-panel.rp{background:rgba(255,61,61,0.08);border:1px solid rgba(255,61,61,0.4);box-shadow:0 0 18px rgba(255,61,61,0.2),inset 0 0 14px rgba(255,61,61,0.08)}
+.wk-num{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;line-height:1}
+.wk-num.g{color:#00ff88;text-shadow:0 0 10px #00ff88,0 0 24px #00e676}
+.wk-num.r{color:#ff4444;text-shadow:0 0 10px #ff4444,0 0 24px #ff3d3d}
+.wk-lbl{font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;text-align:center}
+.wk-btn{width:34px;height:34px;border-radius:8px;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s}
+.wk-btn.g{background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.4);box-shadow:0 0 10px rgba(0,230,118,0.25)}
+.wk-btn.r{background:rgba(255,61,61,0.12);border:1px solid rgba(255,61,61,0.4);box-shadow:0 0 10px rgba(255,61,61,0.25)}
+/* Arrows between panel and trophy */
+.wk-arrows{display:flex;flex-direction:column;gap:4px;align-items:center}
+.wk-arr{font-size:15px;opacity:0.7}
+.wk-arr.ga{color:#00ff88;text-shadow:0 0 8px #00e676}
+.wk-arr.ra{color:#ff4444;text-shadow:0 0 8px #ff3d3d}
+@keyframes arrRight{0%{transform:translateX(-4px);opacity:.3}50%{opacity:1}100%{transform:translateX(4px);opacity:.3}}
+@keyframes arrDown{0%{transform:translateY(-4px);opacity:.3}50%{opacity:1}100%{transform:translateY(4px);opacity:.3}}
+.wk-arr.ga{animation:arrRight 1.2s ease-in-out infinite}
+.wk-arr.ra{animation:arrDown 1.2s ease-in-out infinite}
+.wk-arr:nth-child(2){animation-delay:.2s}
+.wk-arr:nth-child(3){animation-delay:.4s}
+/* Trophy center */
+.wk-trophy{font-size:38px;filter:drop-shadow(0 0 12px gold) drop-shadow(0 0 24px rgba(255,193,7,0.5));animation:trophyPulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes trophyPulse{0%,100%{filter:drop-shadow(0 0 10px gold) drop-shadow(0 0 20px rgba(255,193,7,0.4))}50%{filter:drop-shadow(0 0 20px gold) drop-shadow(0 0 40px rgba(255,193,7,0.7))}}
 
 /* Users panel */
 .users-panel{display:none}
@@ -321,10 +346,46 @@ body::after{content:'';position:fixed;inset:0;
         <div class="calc-res" id="lotRes">حجم اللوت: 0.00</div>
         <div style="font-size:10px;color:var(--muted);margin-top:7px;text-align:center">* (% × رأس المال) / (SL × 10)</div>
       </div>
-      <div class="card">
-        <div class="card-title">🏆 ملخص الأسبوع</div>
-        <div class="week-row"><span style="font-size:13px;color:var(--muted)">🥇 ناجحة:</span><span class="week-val" id="wkW" style="color:var(--green)">0</span></div>
-        <div class="week-row"><span style="font-size:13px;color:var(--muted)">👎 خاسرة:</span><span class="week-val" id="wkL" style="color:var(--red)">0</span></div>
+      <div class="card wk-card">
+        <div class="card-title" style="justify-content:center;margin-bottom:6px">🏆 ملخص الأسبوع</div>
+        <div class="wk-body">
+
+          <!-- Win side (right in RTL) -->
+          <div class="wk-side">
+            <div class="wk-lbl">ناجحة</div>
+            <div class="wk-panel gp">
+              <div class="wk-num g" id="wkW">0</div>
+              <div class="wk-btn g">👍</div>
+            </div>
+          </div>
+
+          <!-- Arrows win -->
+          <div class="wk-arrows">
+            <span class="wk-arr ga">→</span>
+            <span class="wk-arr ga">→</span>
+            <span class="wk-arr ga">→</span>
+          </div>
+
+          <!-- Trophy center -->
+          <div class="wk-trophy">🏆</div>
+
+          <!-- Arrows loss -->
+          <div class="wk-arrows">
+            <span class="wk-arr ra">↓</span>
+            <span class="wk-arr ra">↓</span>
+            <span class="wk-arr ra">↓</span>
+          </div>
+
+          <!-- Loss side -->
+          <div class="wk-side">
+            <div class="wk-lbl">خاسرة</div>
+            <div class="wk-panel rp">
+              <div class="wk-num r" id="wkL">0</div>
+              <div class="wk-btn r">👎</div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>
