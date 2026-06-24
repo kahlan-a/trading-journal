@@ -184,11 +184,8 @@ body::after{content:'';position:fixed;inset:0;
 <!-- ===== ANIMALS ===== -->
 <div class="animals">
 
-  <!-- ARROWS LEFT (up/green) -->
-  <div id="arrowsLeft" style="position:absolute;left:0;top:56px;bottom:44px;width:100px;overflow:hidden"></div>
-
-  <!-- ARROWS RIGHT (down/red) -->
-  <div id="arrowsRight" style="position:absolute;right:0;top:56px;bottom:44px;width:100px;overflow:hidden"></div>
+  <!-- Full-page arrows canvas -->
+  <canvas id="arrowsCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"></canvas>
 
   <!-- REMOVED BULL SVG -->
   <svg style="display:none" viewBox="0 0 560 560" xmlns="http://www.w3.org/2000/svg">
@@ -1032,62 +1029,70 @@ async function buildTicker(){
   }
 }
 
-// ===== ANIMATED ARROWS (canvas orbit) =====
+// ===== ANIMATED ARROWS (full-page random flight) =====
 function buildArrows(){
-  spawnArrowCanvas('arrowsLeft','#00e676','up');
-  spawnArrowCanvas('arrowsRight','#ff3d3d','down');
-}
+  const cv=document.getElementById('arrowsCanvas');
+  if(!cv)return;
+  const ctx=cv.getContext('2d');
 
-function spawnArrowCanvas(id,color,dir){
-  const el=document.getElementById(id);
-  if(!el)return;
-  el.innerHTML='';
-  const cv=document.createElement('canvas');
-  cv.style.cssText='position:absolute;inset:0;width:100%;height:100%';
-  el.appendChild(cv);
-
-  function resize(){cv.width=el.offsetWidth;cv.height=el.offsetHeight;}
+  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
   resize();
   window.addEventListener('resize',resize);
 
-  const ctx=cv.getContext('2d');
-  const N=10;
+  const rand=(a,b)=>a+Math.random()*(b-a);
+  const N=35; // total arrows
 
-  // Each arrow: phase offset on orbit, vertical speed, size, self-rotation speed
-  const arrows=Array.from({length:N},(_,i)=>({
-    phase:(i/N)*Math.PI*2,
-    orbitSpd:0.016+i*0.003,
-    orbitR:16+i%4*7,
-    y:(i/N)*cv.height,
-    vy:dir==='up'?-(0.55+i*0.07):(0.55+i*0.07),
-    sz:10+i%5*3,
-    baseAlpha:0.5+i%5*0.1,
-    rot:0,
-    rotSpd:(i%2?1:-1)*(0.012+i*0.002)
-  }));
+  // Each arrow: position, velocity, size, rotation, color/direction
+  function mkArrow(i){
+    const up=i<Math.ceil(N/2); // first half green-up, rest red-down
+    const angle=up
+      ? rand(-Math.PI*0.75,-Math.PI*0.25)        // mostly upward ±45°
+      : rand(Math.PI*0.25, Math.PI*0.75);         // mostly downward ±45°
+    const spd=rand(0.6,1.8);
+    return {
+      x:rand(0,window.innerWidth),
+      y:rand(0,window.innerHeight),
+      vx:Math.cos(angle)*spd,
+      vy:Math.sin(angle)*spd,
+      sz:rand(9,22),
+      rot:angle+(up?-Math.PI/2:Math.PI/2),        // face direction of travel
+      rotSpd:(Math.random()-0.5)*0.025,
+      alpha:rand(0.35,0.75),
+      alphaDelta:(Math.random()-0.5)*0.006,
+      color:up?'#00e676':'#ff3d3d',
+      glow:up?'#00ffaa':'#ff7777',
+      up,
+      wobble:rand(0,Math.PI*2),
+      wobbleSpd:rand(0.018,0.045),
+      wobbleAmp:rand(0.03,0.12),
+    };
+  }
 
-  function drawArrow(x,y,sz,rot,alpha){
+  const arrows=Array.from({length:N},(_,i)=>mkArrow(i));
+
+  function drawArrow(a){
+    const{x,y,sz,rot,alpha,color,glow,up}=a;
     ctx.save();
     ctx.translate(x,y);
     ctx.rotate(rot);
-    ctx.globalAlpha=alpha;
-    ctx.shadowColor=color;
-    ctx.shadowBlur=16;
+    ctx.globalAlpha=Math.max(0.05,Math.min(0.9,alpha));
+    ctx.shadowColor=glow;
+    ctx.shadowBlur=18;
     ctx.fillStyle=color;
-    ctx.strokeStyle=dir==='up'?'#00ffaa':'#ff7777';
-    ctx.lineWidth=1.2;
+    ctx.strokeStyle=glow;
+    ctx.lineWidth=1;
     const s=sz;
     ctx.beginPath();
-    if(dir==='up'){
+    if(up){
       ctx.moveTo(0,-s);
-      ctx.lineTo(s*.62,-.05*s);ctx.lineTo(s*.3,-.05*s);
-      ctx.lineTo(s*.3,s*.85);ctx.lineTo(-s*.3,s*.85);
-      ctx.lineTo(-s*.3,-.05*s);ctx.lineTo(-s*.62,-.05*s);
+      ctx.lineTo(s*.6,-.1*s);ctx.lineTo(s*.28,-.1*s);
+      ctx.lineTo(s*.28,s*.8);ctx.lineTo(-s*.28,s*.8);
+      ctx.lineTo(-s*.28,-.1*s);ctx.lineTo(-s*.6,-.1*s);
     }else{
       ctx.moveTo(0,s);
-      ctx.lineTo(s*.62,.05*s);ctx.lineTo(s*.3,.05*s);
-      ctx.lineTo(s*.3,-s*.85);ctx.lineTo(-s*.3,-s*.85);
-      ctx.lineTo(-s*.3,.05*s);ctx.lineTo(-s*.62,.05*s);
+      ctx.lineTo(s*.6,.1*s);ctx.lineTo(s*.28,.1*s);
+      ctx.lineTo(s*.28,-s*.8);ctx.lineTo(-s*.28,-s*.8);
+      ctx.lineTo(-s*.28,.1*s);ctx.lineTo(-s*.6,.1*s);
     }
     ctx.closePath();
     ctx.fill();
@@ -1095,25 +1100,26 @@ function spawnArrowCanvas(id,color,dir){
     ctx.restore();
   }
 
-  let t=0;
   function frame(){
     ctx.clearRect(0,0,cv.width,cv.height);
-    t++;
-    // Sort by sin to create realistic z-depth (arrows cross in front/behind)
-    const sorted=[...arrows].sort((a,b)=>
-      Math.sin(a.phase+t*a.orbitSpd)-Math.sin(b.phase+t*b.orbitSpd)
-    );
-    sorted.forEach(a=>{
+    const W=cv.width, H=cv.height;
+    arrows.forEach(a=>{
+      // wobble rotation
+      a.wobble+=a.wobbleSpd;
+      a.rot+=a.rotSpd+Math.sin(a.wobble)*a.wobbleAmp;
+      // move
+      a.x+=a.vx;
       a.y+=a.vy;
-      a.rot+=a.rotSpd;
-      if(dir==='up'&&a.y<-a.sz*2) a.y=cv.height+a.sz*2;
-      if(dir==='down'&&a.y>cv.height+a.sz*2) a.y=-a.sz*2;
-      const sinV=Math.sin(a.phase+t*a.orbitSpd);
-      const x=cv.width/2+sinV*a.orbitR;
-      const depth=(sinV+1)/2;          // 0..1 — controls opacity/size for 3D feel
-      const alpha=a.baseAlpha*(0.45+depth*0.55);
-      const sizeScale=0.75+depth*0.45;
-      drawArrow(x,a.y,a.sz*sizeScale,a.rot,alpha);
+      // alpha pulse
+      a.alpha+=a.alphaDelta;
+      if(a.alpha>0.78||a.alpha<0.2) a.alphaDelta*=-1;
+      // wrap around screen edges
+      const pad=a.sz*2;
+      if(a.x<-pad) a.x=W+pad;
+      else if(a.x>W+pad) a.x=-pad;
+      if(a.y<-pad) a.y=H+pad;
+      else if(a.y>H+pad) a.y=-pad;
+      drawArrow(a);
     });
     requestAnimationFrame(frame);
   }
