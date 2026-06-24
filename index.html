@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TraderTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Tahoma,sans-serif}
 :root{--bg:#06090d;--card:#0c1520;--card2:#0f1a28;--border:#1a2d45;--green:#00e676;--red:#ff3d3d;--gold:#ffc107;--text:#c8d8e8;--muted:#4a6080}
@@ -97,16 +98,48 @@ body::after{content:'';position:fixed;inset:0;
 .cal-arr{position:absolute;bottom:3px;right:4px;font-size:14px}
 
 /* Stats */
-.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
-.stat-card{background:rgba(15,26,40,0.9);border:1px solid var(--border);border-radius:11px;padding:12px 15px;display:flex;align-items:center;gap:11px;backdrop-filter:blur(6px)}
-.stat-label{font-size:10px;color:var(--muted);margin-bottom:3px}
-.stat-value{font-size:19px;font-weight:700;color:#fff}
-.stat-value.green{color:var(--green)}.stat-value.red{color:var(--red)}
-.circ-wrap{position:relative;width:50px;height:50px;flex-shrink:0}
-.circ-wrap svg{transform:rotate(-90deg)}
-.circ-track{fill:none;stroke:rgba(255,255,255,0.07);stroke-width:5}
-.circ-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .5s;stroke-dasharray:126;stroke-dashoffset:126}
-.circ-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:11px;font-weight:700;color:var(--green)}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:12px}
+.stat-card{
+  background:#040d14;
+  border:1px solid rgba(0,230,118,0.15);
+  border-radius:13px;
+  padding:16px 14px 14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(6px);
+  transition:box-shadow .3s;
+}
+.stat-card::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,230,118,0.015) 4px);
+  pointer-events:none;
+}
+.stat-card.g{border-color:rgba(0,230,118,0.4);box-shadow:0 0 18px rgba(0,230,118,0.18),inset 0 0 24px rgba(0,230,118,0.05)}
+.stat-card.r{border-color:rgba(255,61,61,0.4);box-shadow:0 0 18px rgba(255,61,61,0.18),inset 0 0 24px rgba(255,61,61,0.05)}
+.stat-label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600}
+.digit-val{
+  font-family:'Orbitron',monospace;
+  font-weight:900;
+  font-size:26px;
+  letter-spacing:1px;
+  line-height:1;
+}
+.digit-val.g{
+  color:#00ff88;
+  text-shadow:0 0 8px #00ff88,0 0 20px #00e676,0 0 40px rgba(0,230,118,0.4);
+}
+.digit-val.r{
+  color:#ff4444;
+  text-shadow:0 0 8px #ff4444,0 0 20px #ff3d3d,0 0 40px rgba(255,61,61,0.4);
+}
+.digit-val.w{
+  color:#e0eaf5;
+  text-shadow:0 0 8px rgba(255,255,255,0.3);
+}
+@keyframes digitPulse{0%,100%{opacity:1}50%{opacity:.85}}
+.digit-val{animation:digitPulse 3s ease-in-out infinite}
+.stat-sub{font-size:9px;color:var(--muted);margin-top:6px;letter-spacing:.5px}
 
 /* Sidebar */
 .calc-inp{width:100%;padding:9px 11px;margin-bottom:8px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:7px;color:#fff;font-size:13px}
@@ -254,12 +287,21 @@ body::after{content:'';position:fixed;inset:0;
         <div class="cal-grid" id="calGrid"></div>
       </div>
       <div class="stats-bar">
-        <div class="stat-card"><div><div class="stat-label">Total Trades:</div><div class="stat-value" id="totalTrades">0</div></div></div>
-        <div class="stat-card">
-          <div class="circ-wrap"><svg width="50" height="50" viewBox="0 0 50 50"><circle class="circ-track" cx="25" cy="25" r="20"/><circle class="circ-fill" id="circFill" cx="25" cy="25" r="20"/></svg><div class="circ-txt" id="circTxt">0%</div></div>
-          <div><div class="stat-label">Success Rate:</div><div class="stat-value green" id="winRate">0%</div></div>
+        <div class="stat-card" id="cardTrades">
+          <div class="stat-label">Total Trades</div>
+          <div class="digit-val w" id="totalTrades">0</div>
+          <div class="stat-sub">صفقة مسجّلة</div>
         </div>
-        <div class="stat-card"><div><div class="stat-label">Net Profit and Loss:</div><div class="stat-value green" id="netPnl">$0.00</div></div></div>
+        <div class="stat-card" id="cardRate">
+          <div class="stat-label">Success Rate</div>
+          <div class="digit-val g" id="winRate">0%</div>
+          <div class="stat-sub" id="winRateSub">—</div>
+        </div>
+        <div class="stat-card" id="cardPnl">
+          <div class="stat-label">Net Profit &amp; Loss</div>
+          <div class="digit-val g" id="netPnl">$0.00</div>
+          <div class="stat-sub" id="pnlSub">—</div>
+        </div>
       </div>
       <div class="card users-panel" id="usersPanel">
         <div class="card-title" style="justify-content:space-between;align-items:center">
@@ -680,19 +722,33 @@ function submitTrade(result){
 function updateStats(){
   const trades=getUserTrades();
   const wins=trades.filter(t=>t.result==='win').length;
+  const losses=trades.filter(t=>t.result==='loss').length;
   const total=trades.length;
   const wr=total===0?0:Math.round(wins/total*100);
+
+  // Total Trades card
   document.getElementById('totalTrades').textContent=total;
-  document.getElementById('winRate').textContent=wr+'%';
-  document.getElementById('circTxt').textContent=wr+'%';
-  const cf=document.getElementById('circFill');
-  cf.style.strokeDashoffset=126-(126*wr/100);
-  cf.style.stroke=wr>=50?'var(--green)':'var(--red)';
-  document.getElementById('circTxt').style.color=wr>=50?'var(--green)':'var(--red)';
+
+  // Success Rate card
+  const wrEl=document.getElementById('winRate');
+  wrEl.textContent=wr+'%';
+  wrEl.className='digit-val '+(wr>=50?'g':'r');
+  document.getElementById('cardRate').className='stat-card '+(wr>=50?'g':'r');
+  document.getElementById('winRateSub').textContent=wins+' ربح / '+losses+' خسارة';
+
+  // Net PnL card
   const net=trades.reduce((s,t)=>t.result==='win'?s+t.amount:s-t.amount,0);
-  const el=document.getElementById('netPnl');
-  el.textContent=(net>=0?'+':'-')+'$'+Math.abs(net).toFixed(2);
-  el.className='stat-value '+(net>=0?'green':'red');
+  const pnlEl=document.getElementById('netPnl');
+  const isPos=net>=0;
+  pnlEl.textContent=(isPos?'+':'-')+'$'+Math.abs(net).toFixed(2);
+  pnlEl.className='digit-val '+(isPos?'g':'r');
+  document.getElementById('cardPnl').className='stat-card '+(isPos?'g':'r');
+  document.getElementById('pnlSub').textContent=isPos?'إجمالي الأرباح':'إجمالي الخسائر';
+
+  // Total Trades card stays neutral unless has trades
+  document.getElementById('cardTrades').className='stat-card '+(total>0?'g':'');
+
+  // Week summary
   const rec=trades.slice(-7);
   document.getElementById('wkW').textContent=rec.filter(t=>t.result==='win').length;
   document.getElementById('wkL').textContent=rec.filter(t=>t.result==='loss').length;
