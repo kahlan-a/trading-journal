@@ -209,6 +209,14 @@ body::after{content:'';position:fixed;inset:0;
 .form-ctl option{background:#0d1a28}
 .radio-row{display:flex;gap:18px;font-size:13px}
 .trade-btns{display:flex;gap:9px;margin-top:5px}
+/* Image upload zone */
+.img-zone{border:2px dashed var(--border);border-radius:9px;padding:12px;text-align:center;cursor:pointer;transition:.2s;position:relative;margin-top:4px;background:rgba(255,255,255,0.02)}
+.img-zone:hover,.img-zone.drag{border-color:var(--green);background:rgba(0,230,118,0.05)}
+.img-zone .iz-hint{font-size:11px;color:var(--muted);pointer-events:none}
+.img-zone .iz-hint span{display:block;font-size:18px;margin-bottom:4px}
+.img-preview{width:100%;max-height:160px;object-fit:contain;border-radius:7px;display:block}
+.img-remove{position:absolute;top:5px;left:5px;background:rgba(255,61,61,0.85);color:#fff;border:none;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;z-index:2}
+.img-zone input[type=file]{display:none}
 .btn-win{flex:1;padding:11px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 .btn-loss{flex:1;padding:11px;background:linear-gradient(135deg,#c62828,#ff3d3d);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 .add-user-box{max-width:380px}
@@ -400,6 +408,15 @@ body::after{content:'';position:fixed;inset:0;
     <div class="form-grp"><label class="form-lbl">نوع الصفقة</label><div class="radio-row"><label><input type="radio" name="fType" value="buy" checked> شراء 📈</label><label><input type="radio" name="fType" value="sell"> بيع 📉</label></div></div>
     <div class="form-grp"><label class="form-lbl">المبلغ ($)</label><input type="number" class="form-ctl" id="fAmt" placeholder="مثال: 10"></div>
     <div class="form-grp"><label class="form-lbl">ماذا تعلمت؟</label><textarea class="form-ctl" id="fLesson" rows="2" placeholder="ملاحظاتك..."></textarea></div>
+    <div class="form-grp">
+      <label class="form-lbl">📸 لقطة الشارت</label>
+      <div class="img-zone" id="imgZone" onclick="document.getElementById('imgFile').click()" ondragover="imgDragOver(event)" ondragleave="imgDragLeave()" ondrop="imgDrop(event)">
+        <input type="file" id="imgFile" accept="image/*" onchange="imgFileChange(event)">
+        <div class="iz-hint" id="izHint"><span>📷</span>اضغط لإضافة صورة أو الصق (Ctrl+V)</div>
+        <img id="imgPreview" class="img-preview" style="display:none">
+        <button class="img-remove" id="imgRemove" style="display:none" onclick="clearTradeImg(event)">✕ حذف</button>
+      </div>
+    </div>
     <div class="trade-btns"><button class="btn-win" onclick="submitTrade('win')">✓ ربح</button><button class="btn-loss" onclick="submitTrade('loss')">✗ خسارة</button></div>
   </div>
 </div>
@@ -763,19 +780,81 @@ function buildCal(){
 
 function openTradeModal(d){
   selDay=d;document.getElementById('mdDay').textContent=d;
-  document.getElementById('fAmt').value='';document.getElementById('fLesson').value='';
+  document.getElementById('fAmt').value='';
+  document.getElementById('fLesson').value='';
+  clearTradeImgSilent();
   const ex=getUserTrades().find(t=>t.day===d);
-  if(ex){document.getElementById('fAmt').value=ex.amount;document.getElementById('fLesson').value=ex.lesson||''}
+  if(ex){
+    document.getElementById('fAmt').value=ex.amount;
+    document.getElementById('fLesson').value=ex.lesson||'';
+    if(ex.image) setTradeImgSrc(ex.image);
+  }
   document.getElementById('tradeModal').style.display='flex';
 }
 function closeTradeModal(){document.getElementById('tradeModal').style.display='none'}
+
+// ===== IMAGE HANDLING =====
+let tradeImgData=null;
+
+function setTradeImgSrc(src){
+  tradeImgData=src;
+  document.getElementById('imgPreview').src=src;
+  document.getElementById('imgPreview').style.display='block';
+  document.getElementById('izHint').style.display='none';
+  document.getElementById('imgRemove').style.display='block';
+}
+function clearTradeImg(e){if(e)e.stopPropagation();clearTradeImgSilent();}
+function clearTradeImgSilent(){
+  tradeImgData=null;
+  document.getElementById('imgPreview').src='';
+  document.getElementById('imgPreview').style.display='none';
+  document.getElementById('izHint').style.display='block';
+  document.getElementById('imgRemove').style.display='none';
+  document.getElementById('imgFile').value='';
+}
+
+function compressAndSet(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const MAX=900;
+      let w=img.width,h=img.height;
+      if(w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+      const cv=document.createElement('canvas');
+      cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      setTradeImgSrc(cv.toDataURL('image/jpeg',0.75));
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function imgFileChange(e){const f=e.target.files[0];if(f)compressAndSet(f);}
+function imgDragOver(e){e.preventDefault();document.getElementById('imgZone').classList.add('drag');}
+function imgDragLeave(){document.getElementById('imgZone').classList.remove('drag');}
+function imgDrop(e){
+  e.preventDefault();
+  document.getElementById('imgZone').classList.remove('drag');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/'))compressAndSet(f);
+}
+
+// Paste anywhere to add image
+document.addEventListener('paste',e=>{
+  if(document.getElementById('tradeModal').style.display==='flex'){
+    const item=Array.from(e.clipboardData.items).find(i=>i.type.startsWith('image/'));
+    if(item)compressAndSet(item.getAsFile());
+  }
+});
 
 function submitTrade(result){
   const amt=parseFloat(document.getElementById('fAmt').value);
   if(!amt){alert('أدخل المبلغ');return}
   let trades=getUserTrades();
   const idx=trades.findIndex(t=>t.day===selDay);
-  const entry={day:selDay,result,amount:amt,pair:document.getElementById('fPair').value,type:document.querySelector('input[name="fType"]:checked').value,lesson:document.getElementById('fLesson').value};
+  const entry={day:selDay,result,amount:amt,pair:document.getElementById('fPair').value,type:document.querySelector('input[name="fType"]:checked').value,lesson:document.getElementById('fLesson').value,image:tradeImgData||null};
   if(idx>=0)trades[idx]=entry;else trades.push(entry);
   saveUserTrades(trades);closeTradeModal();buildCal();updateStats();
 }
