@@ -32,10 +32,22 @@ body::after{content:'';position:fixed;inset:0;
 .auth-logo h2{font-size:22px;font-weight:700;color:#fff}.auth-logo h2 span{color:var(--green)}
 .auth-logo p{font-size:13px;color:var(--muted);margin-top:3px}
 .setup-badge{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.3);color:var(--gold);padding:8px 14px;border-radius:8px;font-size:12px;text-align:center;margin-bottom:18px}
-/* Auth Tabs */
-.auth-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:10px;padding:3px;margin-bottom:22px;gap:2px}
-.auth-tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:.2s;border:none;background:transparent}
-.auth-tab.active{background:linear-gradient(135deg,#00c853,#00e676);color:#000}
+/* Auth choice landing */
+.choice-panel{text-align:center;padding:4px 0 8px}
+.choice-sub{color:var(--muted);font-size:13px;margin-bottom:26px;line-height:1.6}
+.choice-cards{display:flex;flex-direction:column;gap:12px}
+.choice-card{width:100%;padding:18px;border:none;border-radius:14px;font-size:16px;font-weight:700;cursor:pointer;transition:.25s;display:flex;align-items:center;justify-content:center;gap:10px}
+.choice-card.login{background:linear-gradient(135deg,#00c853,#00e676);color:#000;box-shadow:0 0 22px rgba(0,230,118,0.4)}
+.choice-card.login:hover{box-shadow:0 0 36px rgba(0,230,118,0.65);transform:translateY(-1px)}
+.choice-card.register{background:transparent;color:#00b0ff;border:2px solid #00b0ff;box-shadow:0 0 14px rgba(0,176,255,0.2)}
+.choice-card.register:hover{background:rgba(0,176,255,0.08);box-shadow:0 0 28px rgba(0,176,255,0.45);transform:translateY(-1px)}
+.choice-card .cc-icon{font-size:20px}
+/* Form back link */
+.back-link{display:block;text-align:center;color:var(--muted);font-size:13px;cursor:pointer;margin-top:14px;transition:.2s}
+.back-link:hover{color:var(--green)}
+/* Auth Tabs (hidden — kept for JS refs) */
+.auth-tabs{display:none}
+.auth-tab{display:none}
 /* Pending waiting screen */
 .wait-screen{text-align:center;padding:10px 0}
 .wait-icon{font-size:48px;margin-bottom:14px;animation:pulse 2s infinite}
@@ -274,18 +286,32 @@ body::after{content:'';position:fixed;inset:0;
       <button class="btn-primary" onclick="createOwner()">إنشاء حساب المالك 👑</button>
     </div>
     <div id="loginPanel" style="display:none">
-      <!-- Tabs -->
+      <!-- Hidden tabs (JS refs kept) -->
       <div class="auth-tabs">
-        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">تسجيل الدخول</button>
-        <button class="auth-tab" id="tabReg" onclick="switchTab('reg')">إنشاء حساب</button>
+        <button class="auth-tab" id="tabLogin"></button>
+        <button class="auth-tab" id="tabReg"></button>
+      </div>
+
+      <!-- Choice landing -->
+      <div id="choicePanel">
+        <div class="choice-sub">اختر أحد الخيارين للمتابعة</div>
+        <div class="choice-cards">
+          <button class="choice-card login" onclick="showForm('login')">
+            <span class="cc-icon">🔑</span> تسجيل الدخول
+          </button>
+          <button class="choice-card register" onclick="showForm('reg')">
+            <span class="cc-icon">✨</span> إنشاء حساب جديد
+          </button>
+        </div>
       </div>
 
       <!-- Login form -->
-      <div id="loginForm">
+      <div id="loginForm" style="display:none">
         <div class="err-msg" id="loginErr"></div>
         <div class="field"><label>اسم المستخدم</label><input id="loginUser" placeholder="اسم المستخدم" autocomplete="off"></div>
         <div class="field"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="كلمة المرور"></div>
         <button class="btn-primary" onclick="doLogin()">دخول →</button>
+        <span class="back-link" onclick="showChoice()">← العودة للخيارات</span>
       </div>
 
       <!-- Register form -->
@@ -294,6 +320,7 @@ body::after{content:'';position:fixed;inset:0;
         <div class="field"><label>اسم المستخدم</label><input id="reqUser" placeholder="اختر اسم مستخدم" autocomplete="off"></div>
         <div class="field"><label>كلمة المرور</label><input id="reqPass" type="password" placeholder="كلمة المرور (4 أحرف على الأقل)"></div>
         <button class="btn-primary" onclick="sendAccountRequest()">إرسال طلب الحساب ←</button>
+        <span class="back-link" onclick="showChoice()">← العودة للخيارات</span>
       </div>
 
       <!-- Waiting for approval screen -->
@@ -303,7 +330,7 @@ body::after{content:'';position:fixed;inset:0;
           <div class="wait-title">تم إرسال طلبك!</div>
           <div class="wait-user" id="waitUserName"></div>
           <div class="wait-sub">طلبك وصل للمالك — بمجرد موافقته يمكنك تسجيل الدخول</div>
-          <button class="btn-secondary" onclick="switchTab('login')">← الرجوع لتسجيل الدخول</button>
+          <button class="btn-secondary" onclick="showForm('login')">← الرجوع لتسجيل الدخول</button>
         </div>
       </div>
     </div>
@@ -498,6 +525,7 @@ function init(){
   if(!owner){document.getElementById('setupPanel').style.display='block';document.getElementById('loginPanel').style.display='none';return}
   document.getElementById('setupPanel').style.display='none';
   document.getElementById('loginPanel').style.display='block';
+  showChoice();
   const s=getSession();
   if(s){const u=d.users.find(x=>x.username===s.username);if(u&&u.status!=='pending'&&u.status!=='rejected')enterApp(u)}
 }
@@ -521,20 +549,26 @@ function createOwner(){
   document.getElementById('loginUser').value=u;
 }
 
-function switchTab(tab){
-  const isLogin=tab==='login';
-  document.getElementById('tabLogin').className='auth-tab'+(isLogin?' active':'');
-  document.getElementById('tabReg').className='auth-tab'+(!isLogin?' active':'');
-  document.getElementById('tabLogin').style.display='';
-  document.getElementById('tabReg').style.display='';
-  document.getElementById('loginForm').style.display=isLogin?'block':'none';
-  document.getElementById('regForm').style.display=(!isLogin)?'block':'none';
+function showChoice(){
+  document.getElementById('choicePanel').style.display='block';
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('regForm').style.display='none';
   document.getElementById('waitScreen').style.display='none';
   document.getElementById('loginErr').style.display='none';
   document.getElementById('reqErr').style.display='none';
 }
-function showRequestPanel(){switchTab('reg')}
-function showLoginPanel(){switchTab('login')}
+function showForm(tab){
+  const isLogin=tab==='login';
+  document.getElementById('choicePanel').style.display='none';
+  document.getElementById('loginForm').style.display=isLogin?'block':'none';
+  document.getElementById('regForm').style.display=isLogin?'none':'block';
+  document.getElementById('waitScreen').style.display='none';
+  document.getElementById('loginErr').style.display='none';
+  document.getElementById('reqErr').style.display='none';
+}
+function switchTab(tab){showForm(tab)}
+function showRequestPanel(){showForm('reg')}
+function showLoginPanel(){showForm('login')}
 
 function sendAccountRequest(){
   const u=document.getElementById('reqUser').value.trim();
@@ -551,8 +585,7 @@ function sendAccountRequest(){
   document.getElementById('reqPass').value='';
   // Show waiting screen
   document.getElementById('regForm').style.display='none';
-  document.getElementById('tabLogin').style.display='none';
-  document.getElementById('tabReg').style.display='none';
+  document.getElementById('choicePanel').style.display='none';
   document.getElementById('waitUserName').textContent='👤 '+u;
   document.getElementById('waitScreen').style.display='block';
 }
