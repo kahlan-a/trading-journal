@@ -82,6 +82,32 @@ body::after{content:'';position:fixed;inset:0;
 .btn-logout{background:transparent;border:1px solid rgba(255,61,61,0.35);color:var(--red);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px}
 .btn-logout:hover{background:rgba(255,61,61,0.08)}
 .btn-add-user{background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.4);color:var(--gold);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;display:none}
+/* ===== PROFILE PANEL ===== */
+.profile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:160;justify-content:center;align-items:center}
+.profile-box{background:#0b1624;border:1px solid var(--border);border-radius:18px;padding:28px 30px;width:90%;max-width:400px;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.5)}
+.profile-close{position:absolute;top:14px;left:16px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1}
+.profile-close:hover{color:#fff}
+.profile-header{text-align:center;margin-bottom:22px}
+.profile-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;color:#000;margin:0 auto 10px;box-shadow:0 0 20px rgba(0,230,118,0.4)}
+.profile-avatar.owner-av{background:linear-gradient(135deg,#ffd700,#ff8f00);box-shadow:0 0 20px rgba(255,193,7,0.5)}
+.profile-avatar.user-av{background:linear-gradient(135deg,#00e676,#00bcd4)}
+.profile-name{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px}
+.profile-role{display:inline-block;padding:3px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.profile-role.owner-role{background:rgba(255,193,7,0.15);border:1px solid rgba(255,193,7,0.4);color:var(--gold)}
+.profile-role.user-role{background:rgba(0,230,118,0.1);border:1px solid rgba(0,230,118,0.3);color:var(--green)}
+.profile-divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+.prof-field{margin-bottom:16px}
+.prof-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.prof-row{display:flex;gap:8px;align-items:center}
+.prof-val{flex:1;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;padding:10px 13px;color:#fff;font-size:14px;font-family:inherit}
+.prof-val:focus{outline:none;border-color:var(--green);box-shadow:0 0 8px rgba(0,230,118,0.2)}
+.prof-val[readonly]{cursor:default;color:var(--muted)}
+.prof-icon-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--muted);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;flex-shrink:0;transition:.2s}
+.prof-icon-btn:hover{border-color:var(--green);color:var(--green)}
+.prof-save{width:100%;padding:12px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-top:8px;transition:.2s}
+.prof-save:hover{opacity:.9}
+.prof-ok{color:var(--green);font-size:12px;text-align:center;margin-top:8px;display:none}
+.prof-err{color:var(--red);font-size:12px;text-align:center;margin-top:8px;display:none}
 
 /* ===== MAIN ===== */
 .main{position:relative;z-index:5;display:grid;grid-template-columns:1fr 295px;gap:14px;padding:14px 22px 52px}
@@ -362,7 +388,7 @@ body::after{content:'';position:fixed;inset:0;
     <div class="logo"><div class="logo-sm">📈</div>Trader<span>Track</span></div>
     <div class="header-right">
       <button class="btn-add-user" id="btnAddUser" onclick="openAddUser()">+ إضافة مستخدم</button>
-      <div id="userBadge" class="owner-badge"><span>👑</span><div class="av" id="avLetter">K</div><span id="badgeName">Owner</span></div>
+      <div id="userBadge" class="owner-badge" onclick="openProfile()" style="cursor:pointer" title="لوحة حسابي"><span>👑</span><div class="av" id="avLetter">K</div><span id="badgeName">Owner</span></div>
       <button class="btn-logout" onclick="logout()">تسجيل خروج</button>
     </div>
   </div>
@@ -453,6 +479,48 @@ body::after{content:'';position:fixed;inset:0;
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ===== PROFILE PANEL ===== -->
+<div class="profile-overlay" id="profileOverlay" onclick="closeProfile(event)">
+  <div class="profile-box">
+    <button class="profile-close" onclick="closeProfileBtn()">×</button>
+    <div class="profile-header">
+      <div class="profile-avatar" id="profAvatar">K</div>
+      <div class="profile-name" id="profName">—</div>
+      <span class="profile-role" id="profRole">—</span>
+    </div>
+    <hr class="profile-divider">
+    <div class="prof-err" id="profErr"></div>
+
+    <!-- Username field -->
+    <div class="prof-field">
+      <label>اسم المستخدم</label>
+      <div class="prof-row">
+        <input class="prof-val" id="profUser" readonly>
+        <button class="prof-icon-btn" id="profUserEditBtn" onclick="toggleProfEdit('user')" title="تعديل">✏️</button>
+      </div>
+    </div>
+
+    <!-- Password field -->
+    <div class="prof-field">
+      <label>كلمة المرور</label>
+      <div class="prof-row">
+        <input class="prof-val" id="profPass" type="password" value="placeholder" readonly>
+        <button class="prof-icon-btn" onclick="toggleProfPassVis()" title="إظهار/إخفاء">👁</button>
+        <button class="prof-icon-btn" id="profPassEditBtn" onclick="toggleProfEdit('pass')" title="تعديل">✏️</button>
+      </div>
+    </div>
+
+    <!-- New password confirm (shown only when editing password) -->
+    <div class="prof-field" id="profPass2Field" style="display:none">
+      <label>تأكيد كلمة المرور الجديدة</label>
+      <input class="prof-val" id="profPass2" type="password" placeholder="أعد كتابة كلمة المرور">
+    </div>
+
+    <button class="prof-save" id="profSaveBtn" style="display:none" onclick="saveProfile()">💾 حفظ التغييرات</button>
+    <div class="prof-ok" id="profOk">✅ تم الحفظ بنجاح!</div>
   </div>
 </div>
 
@@ -666,6 +734,128 @@ function enterApp(user){
 function logout(){
   if(currentUser)localStorage.removeItem('tt_hb_'+currentUser.username);
   clearSession();location.reload();
+}
+
+// ===== PROFILE PANEL =====
+let profEditMode={user:false,pass:false};
+
+function openProfile(){
+  const u=currentUser;
+  if(!u)return;
+  const isOwner=u.role==='owner';
+  // avatar
+  const av=document.getElementById('profAvatar');
+  av.textContent=u.username[0].toUpperCase();
+  av.className='profile-avatar '+(isOwner?'owner-av':'user-av');
+  // name & role
+  document.getElementById('profName').textContent=u.username;
+  const roleEl=document.getElementById('profRole');
+  roleEl.textContent=isOwner?'👑 مالك':'👤 مستخدم';
+  roleEl.className='profile-role '+(isOwner?'owner-role':'user-role');
+  // fields
+  document.getElementById('profUser').value=u.username;
+  document.getElementById('profUser').readOnly=true;
+  document.getElementById('profPass').value='••••••••';
+  document.getElementById('profPass').type='password';
+  document.getElementById('profPass').readOnly=true;
+  document.getElementById('profPass2Field').style.display='none';
+  document.getElementById('profSaveBtn').style.display='none';
+  document.getElementById('profOk').style.display='none';
+  document.getElementById('profErr').style.display='none';
+  profEditMode={user:false,pass:false};
+  document.getElementById('profileOverlay').style.display='flex';
+}
+
+function closeProfileBtn(){document.getElementById('profileOverlay').style.display='none'}
+function closeProfile(e){if(e.target===document.getElementById('profileOverlay'))closeProfileBtn()}
+
+function toggleProfPassVis(){
+  const inp=document.getElementById('profPass');
+  if(inp.readOnly&&inp.value==='••••••••'){
+    // show real password from data
+    const d=getData();
+    const stored=d.users.find(x=>x.username===currentUser.username);
+    inp.type='text';
+    // we can't reverse hash, show masked hint
+    inp.value=stored?'[مشفّرة — لا يمكن عرضها]':'';
+    return;
+  }
+  inp.type=inp.type==='password'?'text':'password';
+}
+
+function toggleProfEdit(field){
+  if(field==='user'){
+    profEditMode.user=!profEditMode.user;
+    const inp=document.getElementById('profUser');
+    inp.readOnly=!profEditMode.user;
+    if(profEditMode.user)inp.focus();
+  } else {
+    profEditMode.pass=!profEditMode.pass;
+    const inp=document.getElementById('profPass');
+    inp.readOnly=!profEditMode.pass;
+    if(profEditMode.pass){
+      inp.type='password';inp.value='';inp.focus();
+    }
+    document.getElementById('profPass2Field').style.display=profEditMode.pass?'block':'none';
+  }
+  const anyEdit=profEditMode.user||profEditMode.pass;
+  document.getElementById('profSaveBtn').style.display=anyEdit?'block':'none';
+}
+
+function saveProfile(){
+  const err=document.getElementById('profErr');
+  const ok=document.getElementById('profOk');
+  err.style.display='none';ok.style.display='none';
+  const d=getData();
+  const idx=d.users.findIndex(x=>x.username===currentUser.username);
+  if(idx<0)return;
+
+  // --- username change ---
+  if(profEditMode.user){
+    const newU=document.getElementById('profUser').value.trim();
+    if(!newU){err.textContent='اسم المستخدم لا يمكن أن يكون فارغاً';err.style.display='block';return}
+    if(newU!==currentUser.username&&d.users.find(x=>x.username===newU)){
+      err.textContent='اسم المستخدم مستخدم بالفعل';err.style.display='block';return}
+    if(newU!==currentUser.username){
+      // migrate trade keys
+      Object.keys(d.trades).forEach(k=>{
+        if(k===currentUser.username||k.startsWith(currentUser.username+'_')){
+          const newKey=k.replace(currentUser.username,newU);
+          d.trades[newKey]=d.trades[k];delete d.trades[k];
+        }
+      });
+      d.users[idx].username=newU;
+    }
+  }
+
+  // --- password change ---
+  if(profEditMode.pass){
+    const p1=document.getElementById('profPass').value;
+    const p2=document.getElementById('profPass2').value;
+    if(!p1){err.textContent='أدخل كلمة المرور الجديدة';err.style.display='block';return}
+    if(p1.length<4){err.textContent='كلمة المرور 4 أحرف على الأقل';err.style.display='block';return}
+    if(p1!==p2){err.textContent='كلمتا المرور غير متطابقتين';err.style.display='block';return}
+    d.users[idx].password=simpleHash(p1);
+  }
+
+  saveData(d);
+  const updated=d.users[idx];
+  currentUser=updated;
+  saveSession(updated);
+
+  // update header badge
+  document.getElementById('avLetter').textContent=updated.username[0].toUpperCase();
+  document.getElementById('badgeName').textContent=updated.username;
+  document.getElementById('profName').textContent=updated.username;
+  document.getElementById('profUser').value=updated.username;
+  document.getElementById('profUser').readOnly=true;
+  document.getElementById('profPass').value='••••••••';
+  document.getElementById('profPass').readOnly=true;
+  document.getElementById('profPass2Field').style.display='none';
+  document.getElementById('profSaveBtn').style.display='none';
+  profEditMode={user:false,pass:false};
+  ok.style.display='block';
+  setTimeout(()=>ok.style.display='none',2500);
 }
 
 function startHeartbeat(){
