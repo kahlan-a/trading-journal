@@ -311,7 +311,20 @@ body::after{content:'';position:fixed;inset:0;
         <div class="field"><label>اسم المستخدم</label><input id="loginUser" placeholder="اسم المستخدم" autocomplete="off"></div>
         <div class="field"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="كلمة المرور"></div>
         <button class="btn-primary" onclick="doLogin()">دخول →</button>
+        <span class="back-link" onclick="showResetOwner()" style="margin-top:6px;display:block;text-align:center;color:var(--muted);font-size:12px;cursor:pointer">نسيت كلمة المرور؟</span>
         <span class="back-link" onclick="showChoice()">← العودة للخيارات</span>
+      </div>
+
+      <!-- Owner password reset form -->
+      <div id="resetOwnerForm" style="display:none">
+        <div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--muted)">إعادة تعيين كلمة مرور المالك</div>
+        <div class="err-msg" id="resetErr"></div>
+        <div class="field"><label>اسم مستخدم المالك</label><input id="resetUser" placeholder="اسم المستخدم" autocomplete="off"></div>
+        <div class="field"><label>كلمة المرور الجديدة</label><input id="resetPass1" type="password" placeholder="كلمة مرور جديدة"></div>
+        <div class="field"><label>تأكيد كلمة المرور</label><input id="resetPass2" type="password" placeholder="أعد الكتابة"></div>
+        <div class="field"><label>رمز التحقق السري</label><input id="resetCode" placeholder="أدخل الرمز السري"></div>
+        <button class="btn-primary" onclick="doResetOwner()">تغيير كلمة المرور</button>
+        <span class="back-link" onclick="showForm('login')">← الرجوع لتسجيل الدخول</span>
       </div>
 
       <!-- Register form -->
@@ -549,22 +562,47 @@ function createOwner(){
   document.getElementById('loginUser').value=u;
 }
 
+function hideAllForms(){
+  ['choicePanel','loginForm','regForm','waitScreen','resetOwnerForm'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+  ['loginErr','reqErr','resetErr'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='none';
+  });
+}
 function showChoice(){
+  hideAllForms();
   document.getElementById('choicePanel').style.display='block';
-  document.getElementById('loginForm').style.display='none';
-  document.getElementById('regForm').style.display='none';
-  document.getElementById('waitScreen').style.display='none';
-  document.getElementById('loginErr').style.display='none';
-  document.getElementById('reqErr').style.display='none';
 }
 function showForm(tab){
+  hideAllForms();
   const isLogin=tab==='login';
-  document.getElementById('choicePanel').style.display='none';
   document.getElementById('loginForm').style.display=isLogin?'block':'none';
   document.getElementById('regForm').style.display=isLogin?'none':'block';
-  document.getElementById('waitScreen').style.display='none';
-  document.getElementById('loginErr').style.display='none';
-  document.getElementById('reqErr').style.display='none';
+}
+function showResetOwner(){
+  hideAllForms();
+  document.getElementById('resetOwnerForm').style.display='block';
+}
+function doResetOwner(){
+  const u=document.getElementById('resetUser').value.trim();
+  const p1=document.getElementById('resetPass1').value;
+  const p2=document.getElementById('resetPass2').value;
+  const code=document.getElementById('resetCode').value.trim();
+  const err=document.getElementById('resetErr');
+  err.style.display='none';
+  if(!u||!p1||!p2||!code){err.textContent='يرجى تعبئة جميع الحقول';err.style.display='block';return}
+  if(code!=='KAHLAN2026'){err.textContent='رمز التحقق غير صحيح';err.style.display='block';return}
+  if(p1!==p2){err.textContent='كلمتا المرور غير متطابقتين';err.style.display='block';return}
+  if(p1.length<4){err.textContent='كلمة المرور 4 أحرف على الأقل';err.style.display='block';return}
+  const d=getData();
+  const owner=d.users.find(x=>x.username===u&&x.role==='owner');
+  if(!owner){err.textContent='لم يتم العثور على حساب المالك بهذا الاسم';err.style.display='block';return}
+  owner.password=simpleHash(p1);
+  saveData(d);
+  alert('✅ تم تغيير كلمة المرور بنجاح!');
+  showForm('login');
+  document.getElementById('loginUser').value=u;
 }
 function switchTab(tab){showForm(tab)}
 function showRequestPanel(){showForm('reg')}
