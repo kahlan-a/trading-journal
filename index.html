@@ -274,6 +274,10 @@ body::after{content:'';position:fixed;inset:0;
 .lb-counter{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.6);font-size:12px;z-index:1000}
 .btn-win{flex:1;padding:11px;background:linear-gradient(135deg,#00c853,#00e676);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer}
 .btn-loss{flex:1;padding:11px;background:linear-gradient(135deg,#c62828,#ff3d3d);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+.btn-save-trade{width:100%;padding:13px;background:linear-gradient(135deg,#0077ff,#00b0ff);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;margin-bottom:4px;box-shadow:0 0 16px rgba(0,176,255,0.35)}
+.btn-save-trade:hover{opacity:.9}
+.btn-delete-trade{width:100%;padding:9px;background:transparent;color:var(--red);border:1px solid rgba(255,61,61,0.3);border-radius:8px;font-size:13px;cursor:pointer;margin-top:8px;transition:.2s}
+.btn-delete-trade:hover{background:rgba(255,61,61,0.08);border-color:var(--red)}
 .add-user-box{max-width:380px}
 
 /* Ticker */
@@ -528,7 +532,14 @@ body::after{content:'';position:fixed;inset:0;
 <div class="modal-overlay" id="tradeModal">
   <div class="modal-box">
     <button class="close-btn" onclick="closeTradeModal()">×</button>
-    <div class="modal-title">📝 تسجيل صفقة — يوم <span id="mdDay"></span></div>
+    <div class="modal-title">📝 <span id="mdMode">تسجيل صفقة</span> — يوم <span id="mdDay"></span></div>
+
+    <!-- Edit mode badge -->
+    <div id="editModeBadge" style="display:none;background:rgba(0,176,255,0.1);border:1px solid rgba(0,176,255,0.35);border-radius:8px;padding:7px 12px;font-size:12px;color:#00b0ff;margin-bottom:12px;display:none;align-items:center;gap:8px">
+      <span>✏️</span>
+      <span>وضع التعديل — النتيجة الحالية: <strong id="editCurResult"></strong></span>
+    </div>
+
     <div class="form-grp"><label class="form-lbl">زوج العملات</label><select class="form-ctl" id="fPair"><option>XAU/USD (ذهب)</option><option>EUR/USD</option><option>GBP/USD</option><option>USD/JPY</option></select></div>
     <div class="form-grp"><label class="form-lbl">نوع الصفقة</label><div class="radio-row"><label><input type="radio" name="fType" value="buy" checked> شراء 📈</label><label><input type="radio" name="fType" value="sell"> بيع 📉</label></div></div>
     <div class="form-grp"><label class="form-lbl">المبلغ ($)</label><input type="number" class="form-ctl" id="fAmt" placeholder="مثال: 10"></div>
@@ -541,7 +552,22 @@ body::after{content:'';position:fixed;inset:0;
         <div class="iz-hint" id="izHint" onclick="document.getElementById('imgFile').click()"><span>📷</span>اضغط لإضافة صورة أو اسحبها أو الصق (Ctrl+V)</div>
       </div>
     </div>
-    <div class="trade-btns"><button class="btn-win" onclick="submitTrade('win')">✓ ربح</button><button class="btn-loss" onclick="submitTrade('loss')">✗ خسارة</button></div>
+
+    <!-- New trade buttons -->
+    <div id="newTradeBtns" class="trade-btns">
+      <button class="btn-win" onclick="submitTrade('win')">✓ ربح</button>
+      <button class="btn-loss" onclick="submitTrade('loss')">✗ خسارة</button>
+    </div>
+
+    <!-- Edit trade buttons -->
+    <div id="editTradeBtns" style="display:none">
+      <button class="btn-save-trade" onclick="submitTrade(currentEditResult)">💾 حفظ التعديلات</button>
+      <div class="trade-btns" style="margin-top:8px">
+        <button class="btn-win" style="opacity:0.7;font-size:13px" onclick="submitTrade('win')">تغيير إلى ✓ ربح</button>
+        <button class="btn-loss" style="opacity:0.7;font-size:13px" onclick="submitTrade('loss')">تغيير إلى ✗ خسارة</button>
+      </div>
+      <button class="btn-delete-trade" onclick="deleteTrade()">🗑 حذف الصفقة</button>
+    </div>
   </div>
 </div>
 
@@ -1064,23 +1090,53 @@ function buildCal(){
   }
 }
 
+let currentEditResult=null;
+
 function openTradeModal(d){
-  selDay=d;document.getElementById('mdDay').textContent=d;
+  selDay=d;
+  document.getElementById('mdDay').textContent=d;
   document.getElementById('fAmt').value='';
   document.getElementById('fLesson').value='';
   clearTradeImgSilent();
+  currentEditResult=null;
+
   const ex=getUserTrades().find(t=>t.day===d);
+  const isEdit=!!ex;
+
   if(ex){
     document.getElementById('fAmt').value=ex.amount;
     document.getElementById('fLesson').value=ex.lesson||'';
-    // support old single-image and new multi-image
+    if(ex.pair) document.getElementById('fPair').value=ex.pair;
+    const typeInput=document.querySelector(`input[name="fType"][value="${ex.type||'buy'}"]`);
+    if(typeInput) typeInput.checked=true;
     if(ex.images&&ex.images.length){tradeImages=ex.images.slice();}
     else if(ex.image){tradeImages=[ex.image];}
     renderImgGrid();
+    currentEditResult=ex.result;
   }
+
+  // toggle edit/new UI
+  document.getElementById('mdMode').textContent=isEdit?'تعديل صفقة':'تسجيل صفقة';
+  const badge=document.getElementById('editModeBadge');
+  badge.style.display=isEdit?'flex':'none';
+  if(isEdit){
+    document.getElementById('editCurResult').textContent=ex.result==='win'?'✓ ربح':'✗ خسارة';
+    document.getElementById('editCurResult').style.color=ex.result==='win'?'#00e676':'#ff4444';
+  }
+  document.getElementById('newTradeBtns').style.display=isEdit?'none':'flex';
+  document.getElementById('editTradeBtns').style.display=isEdit?'block':'none';
+
   document.getElementById('tradeModal').style.display='flex';
 }
-function closeTradeModal(){document.getElementById('tradeModal').style.display='none'}
+function closeTradeModal(){document.getElementById('tradeModal').style.display='none';currentEditResult=null;}
+
+function deleteTrade(){
+  if(!confirm('حذف صفقة يوم '+selDay+'؟'))return;
+  let trades=getUserTrades();
+  trades=trades.filter(t=>t.day!==selDay);
+  saveUserTrades(trades);
+  closeTradeModal();buildCal();updateStats();
+}
 
 // ===== IMAGE HANDLING (multiple) =====
 let tradeImages=[];
