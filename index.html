@@ -525,7 +525,7 @@ body::after{content:'';position:fixed;inset:0;
     <div class="prof-field">
       <label>كلمة المرور</label>
       <div class="prof-row">
-        <input class="prof-val" id="profPass" type="password" value="placeholder" readonly>
+        <input class="prof-val" id="profPass" type="password" readonly>
         <button class="prof-icon-btn" onclick="toggleProfPassVis()" title="إظهار/إخفاء">👁</button>
         <button class="prof-icon-btn" id="profPassEditBtn" onclick="toggleProfEdit('pass')" title="تعديل">✏️</button>
       </div>
@@ -551,7 +551,7 @@ body::after{content:'';position:fixed;inset:0;
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
       <div class="modal-title" style="margin:0">📝 <span id="mdMode">تسجيل صفقة</span> — يوم <span id="mdDay"></span></div>
       <!-- Shown only for existing trades -->
-      <div id="tradeActionBar" style="display:none;gap:6px;display:none">
+      <div id="tradeActionBar" style="display:none;gap:6px;align-items:center">
         <span id="tradeResultBadge" style="padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700"></span>
         <button class="tact-btn edit-act" id="btnEditTrade" onclick="enterTradeEditMode()" title="تعديل">✏️ تعديل</button>
         <button class="tact-btn del-act" onclick="deleteTrade()" title="حذف">🗑 حذف</button>
@@ -672,6 +672,7 @@ function createOwner(){
   alert('✅ تم إنشاء حساب المالك!');
   document.getElementById('setupPanel').style.display='none';
   document.getElementById('loginPanel').style.display='block';
+  showForm('login');
   document.getElementById('loginUser').value=u;
 }
 
@@ -1214,13 +1215,16 @@ function renderImgGrid(){
     wrap.appendChild(im);wrap.appendChild(del);
     grid.appendChild(wrap);
   });
-  // "+" add button
-  const add=document.createElement('button');
-  add.className='img-add-btn';
-  add.textContent='+';
-  add.title='إضافة صورة';
-  add.onclick=()=>document.getElementById('imgFile').click();
-  grid.appendChild(add);
+  // "+" add button — يُخفى في وضع القراءة
+  const isReadOnly=document.querySelector('#tradeModal .modal-box')?.classList.contains('trade-readonly');
+  if(!isReadOnly){
+    const add=document.createElement('button');
+    add.className='img-add-btn';
+    add.textContent='+';
+    add.title='إضافة صورة';
+    add.onclick=()=>document.getElementById('imgFile').click();
+    grid.appendChild(add);
+  }
   hint.style.display=tradeImages.length?'none':'block';
 }
 
@@ -1330,10 +1334,16 @@ function updateStats(){
   // Total Trades card stays neutral unless has trades
   document.getElementById('cardTrades').className='stat-card '+(total>0?'g':'');
 
-  // Week summary
-  const rec=trades.slice(-7);
-  document.getElementById('wkW').textContent=rec.filter(t=>t.result==='win').length;
-  document.getElementById('wkL').textContent=rec.filter(t=>t.result==='loss').length;
+  // Week summary — أيام الأسبوع الحالي (الأحد إلى السبت)
+  const today=new Date();
+  const weekStart=new Date(today);weekStart.setDate(today.getDate()-today.getDay());
+  const weekEnd=new Date(weekStart);weekEnd.setDate(weekStart.getDate()+6);
+  const wkTrades=getUserTrades().filter(t=>{
+    const d=new Date(viewYear,viewMonth,t.day);
+    return d>=weekStart&&d<=weekEnd;
+  });
+  document.getElementById('wkW').textContent=wkTrades.filter(t=>t.result==='win').length;
+  document.getElementById('wkL').textContent=wkTrades.filter(t=>t.result==='loss').length;
 }
 
 function calcLot(){
